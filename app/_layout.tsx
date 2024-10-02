@@ -4,7 +4,6 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
-
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -29,8 +28,26 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
+        {/* Define la pantalla de login como la primera pantalla */}
+        <Stack.Screen
+          name="login"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="forgot-password"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="register"
+          options={{ headerShown: false }}
+        />
+        {/* Define la navegación por tabs */}
+        <Stack.Screen
+          name="(tabs)"
+          options={{ headerShown: false }}
+        />
+        {/* Define una pantalla para rutas no encontradas */}
+        <Stack.Screen name="*" options={{ title: 'Not Found' }} />
       </Stack>
     </ThemeProvider>
   );

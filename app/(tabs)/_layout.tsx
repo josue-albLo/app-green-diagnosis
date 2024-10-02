@@ -1,6 +1,5 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -13,9 +12,11 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-      }}>
+      }}
+    >
+      {/* Tab para Home */}
       <Tabs.Screen
-        name="index"
+        name="home" // Solo "home", debe coincidir con home.tsx
         options={{
           title: 'Home',
           tabBarIcon: ({ color, focused }) => (
@@ -23,12 +24,25 @@ export default function TabLayout() {
           ),
         }}
       />
+
+      {/* Tab para Historial */}
       <Tabs.Screen
-        name="explore"
+        name="history" // Solo "history", debe coincidir con history.tsx
         options={{
-          title: 'Explore',
+          title: 'Historial',
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'code-slash' : 'code-slash-outline'} color={color} />
+            <TabBarIcon name={focused ? 'time' : 'time-outline'} color={color} />
+          ),
+        }}
+      />
+
+      {/* Tab para Gestión de Usuario */}
+      <Tabs.Screen
+        name="user-management" // Solo "user-management", debe coincidir con user-management.tsx
+        options={{
+          title: 'Gestionar Usuario',
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name={focused ? 'person' : 'person-outline'} color={color} />
           ),
         }}
       />
