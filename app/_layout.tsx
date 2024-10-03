@@ -6,7 +6,6 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -47,7 +46,7 @@ export default function RootLayout() {
           options={{ headerShown: false }}
         />
         {/* Define una pantalla para rutas no encontradas */}
-        <Stack.Screen name="*" options={{ title: 'Not Found' }} />
+        <Stack.Screen name="+not-found" options={{ title: 'Not Found' }} />
       </Stack>
     </ThemeProvider>
   );
