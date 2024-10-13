@@ -1,17 +1,44 @@
-import React from 'react'
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, StatusBar } from 'react-native'
-import { LinearGradient } from 'expo-linear-gradient'
 import { Feather } from '@expo/vector-icons'
+import { LinearGradient } from 'expo-linear-gradient'
+import { useRouter } from 'expo-router'
+import React, { useState } from 'react'
+import { ActivityIndicator, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { removeItem } from '../../helper/storage'
+
+const Loader = () => (
+  <View style={styles.loaderContainer}>
+    <ActivityIndicator size="large" color="#4caf50" />
+    <Text style={styles.loaderText}>Cerrando sesión...</Text>
+  </View>
+)
 
 export default function Component() {
   const settingsOptions: { icon: 'user' | 'lock' | 'settings' | 'mail' | 'bell' | 'help-circle', text: string }[] = [
     { icon: 'user', text: 'Editar Perfil' },
-    { icon: 'lock', text: 'Cambiar Contraseña' },
     { icon: 'settings', text: 'Preferencias' },
-    { icon: 'mail', text: 'Actualizar Email' },
     { icon: 'bell', text: 'Notificaciones' },
     { icon: 'help-circle', text: 'Ayuda y Soporte' },
-  ]
+  ];
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    setIsLoading(true)
+    try {
+      console.log('Cerrando sesión...')
+      await removeItem('access_token')
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      router.replace('/login')
+    } catch (error) {
+      console.log('Error al cerrar sesión:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  if (isLoading) {
+    return <Loader />
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -50,7 +77,7 @@ export default function Component() {
             ))}
           </View>
 
-          <TouchableOpacity style={styles.logoutButton}>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Feather name="log-out" size={24} color="#ffffff" style={styles.logoutIcon} />
             <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
           </TouchableOpacity>
@@ -165,5 +192,16 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#e8f5e9',
+  },
+  loaderText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#4caf50',
   },
 })

@@ -4,6 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import React, { useEffect, useState } from 'react';
+
 import {
   ActivityIndicator,
   Alert,
@@ -37,16 +38,11 @@ interface WeatherData {
 
 type WeatherCondition = 'clear' | 'clouds' | 'rain' | 'snow' | 'thunderstorm' | 'drizzle' | 'wind' | 'default';
 
-interface WeatherIcon {
-  name: string;
-  color: string;
-  AnimatedComponent: React.FC;
-}
-
 const AnimatedFeather = Animated.createAnimatedComponent(Feather);
 
 const SunnyAnimation: React.FC = () => {
   const rotation = useSharedValue(0);
+  const scale = useSharedValue(1);
 
   useEffect(() => {
     rotation.value = withRepeat(
@@ -54,15 +50,24 @@ const SunnyAnimation: React.FC = () => {
       -1,
       false
     );
+    scale.value = withRepeat(
+      withSequence(
+        withTiming(1.1, { duration: 1000, easing: Easing.inOut(Easing.quad) }),
+        withTiming(1, { duration: 1000, easing: Easing.inOut(Easing.quad) })
+      ),
+      -1,
+      true
+    );
   }, []);
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ rotate: `${rotation.value}deg` }],
-    };
-  });
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { rotate: `${rotation.value}deg` },
+      { scale: scale.value }
+    ],
+  }));
 
-  return <AnimatedFeather name="sun" size={24} color="#f57c00" style={animatedStyle} />;
+  return <AnimatedFeather name="sun" size={32} color="#FFD700" style={animatedStyle} />;
 };
 
 const CloudyAnimation: React.FC = () => {
@@ -79,13 +84,16 @@ const CloudyAnimation: React.FC = () => {
     );
   }, []);
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: translateX.value }],
-    };
-  });
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
 
-  return <AnimatedFeather name="cloud" size={24} color="#78909c" style={animatedStyle} />;
+  return (
+    <View style={{ flexDirection: 'row' }}>
+      <AnimatedFeather name="cloud" size={32} color="#B0C4DE" style={animatedStyle} />
+      <AnimatedFeather name="cloud" size={24} color="#D3D3D3" style={[animatedStyle, { marginLeft: -15, marginTop: 5 }]} />
+    </View>
+  );
 };
 
 const RainyAnimation: React.FC = () => {
@@ -94,21 +102,86 @@ const RainyAnimation: React.FC = () => {
   useEffect(() => {
     translateY.value = withRepeat(
       withSequence(
-        withTiming(10, { duration: 1000, easing: Easing.inOut(Easing.quad) }),
-        withTiming(0, { duration: 1000, easing: Easing.inOut(Easing.quad) })
+        withTiming(15, { duration: 1000, easing: Easing.inOut(Easing.quad) }),
+        withTiming(0, { duration: 0 })
       ),
       -1,
       true
     );
   }, []);
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateY: translateY.value }],
-    };
-  });
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
 
-  return <AnimatedFeather name="cloud-rain" size={24} color="#4fc3f7" style={animatedStyle} />;
+  return (
+    <View>
+      <Feather name="cloud" size={32} color="#708090" />
+      <View style={{ position: 'absolute', top: 20, left: 10 }}>
+        <AnimatedFeather name="droplet" size={12} color="#4682B4" style={animatedStyle} />
+      </View>
+      <View style={{ position: 'absolute', top: 20, left: 20 }}>
+        <AnimatedFeather name="droplet" size={12} color="#4682B4" style={[animatedStyle, { top: 5 }]} />
+      </View>
+    </View>
+  );
+};
+
+const SnowAnimation: React.FC = () => {
+  const translateY = useSharedValue(0);
+  const opacity = useSharedValue(1);
+
+  useEffect(() => {
+    translateY.value = withRepeat(
+      withSequence(
+        withTiming(15, { duration: 2000, easing: Easing.inOut(Easing.quad) }),
+        withTiming(0, { duration: 0 })
+      ),
+      -1,
+      true
+    );
+    opacity.value = withRepeat(
+      withSequence(
+        withTiming(0.5, { duration: 1000 }),
+        withTiming(1, { duration: 1000 })
+      ),
+      -1,
+      true
+    );
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+    opacity: opacity.value,
+  }));
+
+  return (
+    <View>
+      <Feather name="cloud" size={32} color="#B0C4DE" />
+      <View style={{ position: 'absolute', top: 20, left: 10 }}>
+        <AnimatedFeather name="star" size={12} color="white" style={animatedStyle} />
+      </View>
+      <View style={{ position: 'absolute', top: 20, left: 20 }}>
+        <AnimatedFeather name="star" size={12} color="white" style={[animatedStyle, { top: 5 }]} />
+      </View>
+    </View>
+  );
+};
+
+const getWeatherAnimation = (condition: WeatherCondition) => {
+  switch (condition) {
+    case 'clear':
+      return <SunnyAnimation />;
+    case 'clouds':
+      return <CloudyAnimation />;
+    case 'rain':
+    case 'drizzle':
+      return <RainyAnimation />;
+    case 'snow':
+      return <SnowAnimation />;
+    default:
+      return <SunnyAnimation />;
+  }
 };
 
 export default function Component(): JSX.Element {
@@ -117,8 +190,9 @@ export default function Component(): JSX.Element {
   const [image, setImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const defaultBackground = require('./../../assets/public/images/imgBack.jpg');
-  const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-  const ApiKey = '3cdc99f607af291ba131e529e935c0df'; // Reemplaza esto con tu API key real
+  const ApiKey = process.env.EXPO_PUBLIC_API_KEY_OPEN_WEATHER_MAP;
+  const [errorWeather, setErrorWeather] = useState<string | null>(null);
+
   const [weather, setWeather] = useState<WeatherData | null>(null);
 
   const buildUrlApi = (latitude: number, longitude: number): string => {
@@ -129,6 +203,7 @@ export default function Component(): JSX.Element {
     try {
       const res = await fetch(buildUrlApi(latitude, longitude));
       if (!res.ok) {
+        setErrorWeather('No se pudo obtener la información del clima.');
         throw new Error('Network response was not ok');
       }
       const data = await res.json();
@@ -141,21 +216,6 @@ export default function Component(): JSX.Element {
     }
   }
 
-  const weatherIcons: Record<WeatherCondition, WeatherIcon> = {
-    'clear': { name: 'sun', color: '#f57c00', AnimatedComponent: SunnyAnimation },
-    'clouds': { name: 'cloud', color: '#78909c', AnimatedComponent: CloudyAnimation },
-    'rain': { name: 'cloud-rain', color: '#4fc3f7', AnimatedComponent: RainyAnimation },
-    'snow': { name: 'cloud-snow', color: '#b3e5fc', AnimatedComponent: CloudyAnimation },
-    'thunderstorm': { name: 'cloud-lightning', color: '#ffd54f', AnimatedComponent: CloudyAnimation },
-    'drizzle': { name: 'cloud-drizzle', color: '#81d4fa', AnimatedComponent: RainyAnimation },
-    'wind': { name: 'wind', color: '#b0bec5', AnimatedComponent: CloudyAnimation },
-    'default': { name: 'thermometer', color: '#ff5722', AnimatedComponent: SunnyAnimation },
-  };
-
-  const getWeatherIcon = (condition: WeatherCondition): WeatherIcon => {
-    return weatherIcons[condition] || weatherIcons['default'];
-  }
-
   useEffect(() => {
     (async () => {
       try {
@@ -164,12 +224,7 @@ export default function Component(): JSX.Element {
           Alert.alert('Permisos para acceder a la ubicación denegados.');
           return;
         }
-
         let currentLocation = await Location.getCurrentPositionAsync({});
-        setLocation({
-          latitude: currentLocation.coords.latitude,
-          longitude: currentLocation.coords.longitude,
-        });
         await getWeather(currentLocation.coords.latitude, currentLocation.coords.longitude);
       } catch (error) {
         Alert.alert('Error', 'No se pudo obtener la ubicación actual.');
@@ -226,15 +281,11 @@ export default function Component(): JSX.Element {
 
   const processImage = (): void => {
     setIsLoading(true);
-    // Simulamos un proceso que tarda 3 segundos
     setTimeout(() => {
       setIsLoading(false);
       Alert.alert('Procesamiento completado', 'La imagen ha sido procesada exitosamente.');
     }, 3000);
   };
-
-  const icon = weather ? getWeatherIcon(weather.condition) : weatherIcons['default'];
-  const AnimatedWeatherIcon = icon.AnimatedComponent;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -251,12 +302,14 @@ export default function Component(): JSX.Element {
             <View style={styles.weatherContainer}>
               {weather ? (
                 <>
-                  <AnimatedWeatherIcon />
+                  {getWeatherAnimation(weather.condition)}
                   <Text style={styles.weatherText}>{`${weather.temperature}°C`}</Text>
                   <Text style={styles.cityText}>{weather.city}</Text>
                 </>
               ) : (
-                <Text style={styles.weatherText}>Cargando clima...</Text>
+                <Text style={styles.weatherText}>
+                  {errorWeather ?? 'Cargando...'}
+                </Text>
               )}
             </View>
           </View>

@@ -1,12 +1,14 @@
-import React from 'react'
-import { StyleSheet, Text, TouchableOpacity, View, KeyboardAvoidingView, Platform, ScrollView, Image } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { Feather } from '@expo/vector-icons'
+import axios from 'axios'
+import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import { Formik } from 'formik'
+import React, { useState } from 'react'
+import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Button, Input } from 'react-native-elements'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import * as Yup from 'yup'
-import { Input, Button } from 'react-native-elements'
-import { LinearGradient } from 'expo-linear-gradient'
-import { Feather } from '@expo/vector-icons'
+import { setItem } from '../helper/storage'
 
 interface LoginFormValues {
   email: string
@@ -19,11 +21,38 @@ const validationSchema = Yup.object().shape({
 })
 
 export default function LoginScreen() {
-  const router = useRouter()
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const handleLogin = (values: LoginFormValues) => {
-    console.log('Datos de inicio de sesión:', values)
-    router.push('/(tabs)/home')
+  const handleLogin = async (values: LoginFormValues) => {
+    setIsLoading(true);
+    setErrorMessage('');
+
+    const url = `${process.env.EXPO_PUBLIC_API_GATEWAY_AUTH_URL}/login`;
+    console.log('Datos de inicio de sesión:', values);
+    console.log('Procesando inicio de sesión...');
+    console.log('URL:', url);
+
+    try {
+      const response = await axios.post(url, values, {
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.status === 200) {
+        const token = response.data['access_token'] ?? '';
+        setItem('access_token', token);
+        console.log('Inicio de sesión exitoso:', response.data);
+        router.push('/home');
+      }
+    } catch (error) {
+      console.log('Error:', error);
+      setErrorMessage('Credenciales incorrectas. Por favor, inténtalo de nuevo.');
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -63,6 +92,7 @@ export default function LoginScreen() {
                     leftIcon={<Feather name="mail" size={24} color="#4CAF50" />}
                     inputContainerStyle={styles.inputContainer}
                     inputStyle={styles.input}
+                    disabled={isLoading}
                   />
                   <Input
                     placeholder="Contraseña"
@@ -75,16 +105,23 @@ export default function LoginScreen() {
                     leftIcon={<Feather name="lock" size={24} color="#4CAF50" />}
                     inputContainerStyle={styles.inputContainer}
                     inputStyle={styles.input}
+                    disabled={isLoading}
                   />
 
+                  {errorMessage ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null}
+
                   <Button
-                    title="Iniciar Sesión"
+                    title={isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
                     onPress={() => handleSubmit()}
                     buttonStyle={styles.loginButton}
                     titleStyle={styles.buttonTitle}
+                    disabled={isLoading}
+                    icon={isLoading ? (
+                      <ActivityIndicator size="small" color="#ffffff" style={styles.loader} />
+                    ) : undefined}
                   />
 
-                  <TouchableOpacity style={styles.linkButton}>
+                  <TouchableOpacity style={styles.linkButton} disabled={isLoading}>
                     <Text onPress={() => router.push('/forgot-password')} style={styles.linkText}>¿Olvidaste tu contraseña?</Text>
                   </TouchableOpacity>
 
@@ -94,6 +131,7 @@ export default function LoginScreen() {
                     buttonStyle={styles.registerButton}
                     titleStyle={styles.registerButtonTitle}
                     onPress={() => router.push('/register')}
+                    disabled={isLoading}
                   />
                 </View>
               )}
@@ -179,5 +217,13 @@ const styles = StyleSheet.create({
     color: '#4CAF50',
     fontSize: 16,
     fontWeight: '600',
+  },
+  errorMessage: {
+    color: 'red',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  loader: {
+    marginRight: 10,
   },
 })

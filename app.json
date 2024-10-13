@@ -17,9 +17,11 @@
     },
     "android": {
       "adaptiveIcon": {
+        "package": "com.jzue.green_diagnosis",
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.jgoz06.greendiagnosis"
     },
     "web": {
       "bundler": "metro",
@@ -27,10 +29,16 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "4353342e-382e-4539-9f81-a9ccd09fe8da"
+      }
     }
   }
 }
