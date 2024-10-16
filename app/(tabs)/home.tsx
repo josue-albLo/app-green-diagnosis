@@ -296,9 +296,6 @@ export default function Component(): JSX.Element {
       >
         <View style={styles.content}>
           <View style={styles.header}>
-            <TouchableOpacity style={styles.menuButton}>
-              <Feather name="menu" size={24} color="#2e7d32" />
-            </TouchableOpacity>
             <View style={styles.weatherContainer}>
               {weather ? (
                 <>
@@ -385,7 +382,7 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
     marginVertical: height * 0.02,
   },

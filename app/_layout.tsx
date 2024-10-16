@@ -40,6 +40,14 @@ export default function RootLayout() {
           name="register"
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="update-info"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="help-and-support"
+          options={{ headerShown: false }}
+        />
         {/* Define la navegación por tabs */}
         <Stack.Screen
           name="(tabs)"

@@ -12,8 +12,8 @@ interface RegisterFormValues {
   fullName: string
   email: string
   password: string
-  confirmPassword: string
-  age: string
+  department: string
+  town: string
 }
 
 const validationSchema = Yup.object().shape({
@@ -52,9 +52,9 @@ export default function RegisterScreen() {
               />
               <Text style={styles.appName}>PlantCare</Text>
             </View>
-            
+
             <Formik
-              initialValues={{ fullName: '', email: '', password: '', confirmPassword: '', age: '' }}
+              initialValues={{ fullName: '', email: '', password: '', department: '', town: '' }}
               validationSchema={validationSchema}
               onSubmit={handleRegister}
             >
@@ -95,24 +95,24 @@ export default function RegisterScreen() {
                     inputStyle={styles.input}
                   />
                   <Input
-                    placeholder="Confirmar Contraseña"
-                    secureTextEntry
-                    onChangeText={handleChange('confirmPassword')}
-                    onBlur={handleBlur('confirmPassword')}
-                    value={values.confirmPassword}
-                    errorMessage={touched.confirmPassword && errors.confirmPassword ? errors.confirmPassword : ''}
-                    leftIcon={<Feather name="lock" size={24} color="#4CAF50" />}
+                    placeholder="Departamento"
+                    keyboardType="default"
+                    onChangeText={handleChange('department')}
+                    onBlur={handleBlur('department')}
+                    value={values.department}
+                    errorMessage={touched.department && errors.department ? errors.department : ''}
+                    leftIcon={<Feather name="map-pin" size={24} color="#4CAF50" />}
                     inputContainerStyle={styles.inputContainer}
                     inputStyle={styles.input}
                   />
                   <Input
-                    placeholder="Edad"
-                    keyboardType="numeric"
-                    onChangeText={handleChange('age')}
-                    onBlur={handleBlur('age')}
-                    value={values.age}
-                    errorMessage={touched.age && errors.age ? errors.age : ''}
-                    leftIcon={<Feather name="calendar" size={24} color="#4CAF50" />}
+                    placeholder="Ciudad"
+                    keyboardType="default"
+                    onChangeText={handleChange('town')}
+                    onBlur={handleBlur('town')}
+                    value={values.town}
+                    errorMessage={touched.town && errors.town ? errors.town : ''}
+                    leftIcon={<Feather name="map-pin" size={24} color="#4CAF50" />}
                     inputContainerStyle={styles.inputContainer}
                     inputStyle={styles.input}
                   />

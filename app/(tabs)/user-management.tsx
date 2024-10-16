@@ -2,8 +2,9 @@ import { Feather } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import React, { useState } from 'react'
-import { ActivityIndicator, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, Platform, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { removeItem } from '../../helper/storage'
+import {SecurityKeys} from '../../enums/security-keys.enum';
 
 const Loader = () => (
   <View style={styles.loaderContainer}>
@@ -12,12 +13,25 @@ const Loader = () => (
   </View>
 )
 
+interface SettingOption {
+  icon: 'user' | 'lock' | 'settings' | 'mail' | 'bell' | 'help-circle';
+  text: string;
+  onPress?: () => void; // Propiedad opcional
+}
+
 export default function Component() {
-  const settingsOptions: { icon: 'user' | 'lock' | 'settings' | 'mail' | 'bell' | 'help-circle', text: string }[] = [
-    { icon: 'user', text: 'Editar Perfil' },
-    { icon: 'settings', text: 'Preferencias' },
-    { icon: 'bell', text: 'Notificaciones' },
-    { icon: 'help-circle', text: 'Ayuda y Soporte' },
+
+  const navigateToUpdateInfo = () => {
+    router.push('/update-info');
+  }
+
+  const navigateToHelpAndSupport = () => {
+    router.push('/help-and-support');
+  }
+
+  const settingsOptions: SettingOption[] = [
+    { icon: 'user', text: 'Editar Perfil', onPress: navigateToUpdateInfo },
+    { icon: 'help-circle', text: 'Ayuda y Soporte', onPress: navigateToHelpAndSupport },
   ];
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
@@ -26,7 +40,8 @@ export default function Component() {
     setIsLoading(true)
     try {
       console.log('Cerrando sesión...')
-      await removeItem('access_token')
+      await removeItem(SecurityKeys.ACCESS_TOKEN);
+      await removeItem(SecurityKeys.USER);
       await new Promise(resolve => setTimeout(resolve, 2000))
       router.replace('/login')
     } catch (error) {
@@ -40,50 +55,50 @@ export default function Component() {
     return <Loader />
   }
 
+
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
       <LinearGradient
         colors={['#e8f5e9', '#c8e6c9']}
         style={styles.gradient}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.header}>
-            <TouchableOpacity style={styles.backButton}>
-              <Feather name="arrow-left" size={24} color="#2e7d32" />
-            </TouchableOpacity>
-            <View style={styles.headerTextContainer}>
-              <Text style={styles.headerText}>Bienvenido, Usuario</Text>
-              <Text style={styles.subHeaderText}>Administra tu cuenta y preferencias</Text>
+        <SafeAreaView style={styles.safeArea}>
+          <ScrollView contentContainerStyle={styles.scrollContent}>
+            <View style={styles.header}>
+              <View style={styles.headerTextContainer}>
+                <Text style={styles.headerText}>Bienvenido, Usuario</Text>
+                <Text style={styles.subHeaderText}>Administra tu cuenta y preferencias</Text>
+              </View>
             </View>
-          </View>
 
-          <View style={styles.avatarContainer}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>U</Text>
-            </View>
-            <TouchableOpacity style={styles.editAvatarButton}>
-              <Feather name="edit-2" size={16} color="#ffffff" />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.settingsContainer}>
-            {settingsOptions.map((option, index) => (
-              <TouchableOpacity key={index} style={styles.settingCard}>
-                <Feather name={option.icon} size={24} color="#4caf50" style={styles.settingIcon} />
-                <Text style={styles.settingText}>{option.text}</Text>
-                <Feather name="chevron-right" size={24} color="#4caf50" />
+            <View style={styles.avatarContainer}>
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>U</Text>
+              </View>
+              <TouchableOpacity style={styles.editAvatarButton}>
+                <Feather name="edit-2" size={16} color="#ffffff" />
               </TouchableOpacity>
-            ))}
-          </View>
+            </View>
 
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Feather name="log-out" size={24} color="#ffffff" style={styles.logoutIcon} />
-            <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
-          </TouchableOpacity>
-        </ScrollView>
+            <View style={styles.settingsContainer}>
+              {settingsOptions.map((option, index) => (
+                <TouchableOpacity onPress={option.onPress} key={index} style={styles.settingCard}>
+                  <Feather name={option.icon} size={24} color="#4caf50" style={styles.settingIcon} />
+                  <Text style={styles.settingText}>{option.text}</Text>
+                  <Feather name="chevron-right" size={24} color="#4caf50" />
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+              <Feather name="log-out" size={24} color="#ffffff" style={styles.logoutIcon} />
+              <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </SafeAreaView>
       </LinearGradient>
-    </SafeAreaView>
+    </View>
   )
 }
 
@@ -93,6 +108,10 @@ const styles = StyleSheet.create({
   },
   gradient: {
     flex: 1,
+  },
+  safeArea: {
+    flex: 1,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   scrollContent: {
     flexGrow: 1,
@@ -109,6 +128,7 @@ const styles = StyleSheet.create({
   },
   headerTextContainer: {
     flex: 1,
+    alignItems: 'center',
   },
   headerText: {
     fontSize: 24,

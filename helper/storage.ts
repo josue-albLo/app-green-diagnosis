@@ -13,12 +13,15 @@ export const getItem = async (key: string) => {
     try {
         const data = await SecureStore.getItemAsync(key);
         if (data !== null) {
-            console.log('Datos recuperados:', data);
+            console.log('Datos recuperados correctamente');
+            return data;
         } else {
             console.log('No se encontraron datos');
+            return null;
         }
     } catch (error) {
         console.log('Error al recuperar los datos:', error);
+        return null;
     }
 }
 

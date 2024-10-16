@@ -1,7 +1,6 @@
-import React, { useState } from 'react'
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, Image, SafeAreaView, StatusBar } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
-import { Feather } from '@expo/vector-icons'
+import React, { useState } from 'react'
+import { FlatList, Image, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 // Updated simulated data for the analysis history
 const historyData = [
@@ -86,13 +85,7 @@ export default function AnalysisHistoryScreen() {
         style={styles.gradient}
       >
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton}>
-            <Feather name="arrow-left" size={24} color="#2e7d32" />
-          </TouchableOpacity>
           <Text style={styles.headerText}>Analysis History</Text>
-          <TouchableOpacity style={styles.filterButton}>
-            <Feather name="filter" size={24} color="#2e7d32" />
-          </TouchableOpacity>
         </View>
 
         <FlatList
@@ -116,7 +109,6 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 20,

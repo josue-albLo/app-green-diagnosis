@@ -9,6 +9,7 @@ import { Button, Input } from 'react-native-elements'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import * as Yup from 'yup'
 import { setItem } from '../helper/storage'
+import {SecurityKeys} from '../enums/security-keys.enum';
 
 interface LoginFormValues {
   email: string
@@ -43,7 +44,8 @@ export default function LoginScreen() {
 
       if (response.status === 200) {
         const token = response.data['access_token'] ?? '';
-        setItem('access_token', token);
+        setItem(SecurityKeys.ACCESS_TOKEN, token);
+        setItem(SecurityKeys.USER, values.email);
         console.log('Inicio de sesión exitoso:', response.data);
         router.push('/home');
       }
