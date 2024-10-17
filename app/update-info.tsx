@@ -5,13 +5,13 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import { Formik } from 'formik'
 import React, { useEffect, useState } from 'react'
-import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, ActivityIndicator, StatusBar } from 'react-native'
+import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, View } from 'react-native'
 import { Button, Input, Text } from 'react-native-elements'
+import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import * as Yup from 'yup'
 import { SecurityKeys } from '../enums/security-keys.enum'
 import { getItem } from '../helper/storage'
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen'
 
 export const UpdateFormValues = {
     email: '',
@@ -37,6 +37,8 @@ export default function ProfileForm() {
     const [town, setTown] = useState<string>('');
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [isSaving, setIsSaving] = useState<boolean>(false);
+    const loadingText = 'Cargando datos del usuario...';
+    const userProfileText = 'Perfil de Usuario';
 
     const handleSubmit = async (values: typeof UpdateFormValues) => {
         setIsSaving(true);
@@ -123,7 +125,7 @@ export default function ProfileForm() {
         return (
             <View style={styles.loaderContainer}>
                 <ActivityIndicator size="large" color="#4CAF50" />
-                <Text style={styles.loaderText}>Cargando datos del usuario...</Text>
+                <Text style={styles.loaderText}>{loadingText}</Text>
             </View>
         );
     }
@@ -150,7 +152,7 @@ export default function ProfileForm() {
                                     onPress={() => router.back()}
                                     type="clear"
                                 />
-                                <Text h4 style={styles.headerText}>Perfil de Usuario</Text>
+                                <Text h4 style={styles.headerText}>{userProfileText}</Text>
                             </View>
 
                             <View style={styles.avatarContainer}>

@@ -243,21 +243,29 @@ export default function Component(): JSX.Element {
   }, []);
 
   const pickImageFromGallery = async (): Promise<void> => {
-    if (hasGalleryPermission === false) {
-      Alert.alert('Permiso denegado', 'No se ha otorgado permiso para acceder a la galería. Por favor, habilítalo en la configuración.');
+    if (!hasGalleryPermission) {
+      Alert.alert('Permiso denegado', 'No se ha otorgado permiso para acceder a la galería.');
       return;
     }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 1,
-    });
-
-    if (!result.canceled && result.assets?.[0]?.uri) {
-      setImage(result.assets[0].uri);
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: false, // Habilitamos la edición
+        quality: 1,
+      });
+      console.log('Resultado de la selección:', result);
+      if (!result.canceled && result.assets?.[0]?.uri) {
+        console.log('Imagen seleccionada URI:', result.assets[0].uri);
+        setImage(result.assets[0].uri); // Establecemos la imagen seleccionada
+      } else {
+        console.log('Selección de imagen cancelada o sin URI.');
+      }
+    } catch (error) {
+      console.log('Error seleccionando la imagen:', error);
     }
   };
+
 
   const captureImage = async (): Promise<void> => {
     if (hasCameraPermission === false) {
@@ -269,7 +277,7 @@ export default function Component(): JSX.Element {
       allowsEditing: true,
       quality: 1,
     });
-
+    console.log('Resultado de la captura:', result);
     if (!result.canceled && result.assets?.[0]?.uri) {
       setImage(result.assets[0].uri);
     }
@@ -313,7 +321,7 @@ export default function Component(): JSX.Element {
 
           <View style={styles.cameraContainer}>
             <ImageBackground
-              source={image ? { uri: image } : defaultBackground}
+              source={image ?? defaultBackground}
               style={styles.cameraBackground}
               resizeMode="cover"
             >
