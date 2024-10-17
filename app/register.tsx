@@ -1,19 +1,20 @@
-import React from 'react'
-import { StyleSheet, Text, View, KeyboardAvoidingView, Platform, ScrollView, Image } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { useRouter } from 'expo-router'
-import { Formik } from 'formik'
-import * as Yup from 'yup'
-import { Input, Button } from 'react-native-elements'
-import { LinearGradient } from 'expo-linear-gradient'
-import { Feather } from '@expo/vector-icons'
+import React, { useState } from 'react';
+import { Feather } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import { Formik, FormikHelpers } from 'formik';
+import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View, ActivityIndicator, Modal } from 'react-native';
+import { Button, Input } from 'react-native-elements';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import * as Yup from 'yup';
 
 interface RegisterFormValues {
-  fullName: string
-  email: string
-  password: string
-  department: string
-  town: string
+  fullName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  department: string;
+  town: string;
 }
 
 const validationSchema = Yup.object().shape({
@@ -23,27 +24,56 @@ const validationSchema = Yup.object().shape({
   confirmPassword: Yup.string()
     .oneOf([Yup.ref('password')], 'Las contraseñas deben coincidir')
     .required('La confirmación de contraseña es requerida'),
-  age: Yup.number().positive('La edad debe ser un número positivo').integer('La edad debe ser un número entero').required('La edad es requerida'),
-})
+  department: Yup.string().required('El departamento es requerido'),
+  town: Yup.string().required('La ciudad es requerida'),
+});
 
 export default function RegisterScreen() {
-  const router = useRouter()
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [emailError, setEmailError] = useState('');
+  const [apiError, setApiError] = useState(false);
+  const [messageError, setMessageError] = useState('');
 
-  const handleRegister = (values: RegisterFormValues) => {
-    console.log('Datos de registro:', values)
-    router.push('/(tabs)/home')
-  }
+  const handleSubmit = async (
+    values: RegisterFormValues,
+    { setSubmitting, setFieldError }: FormikHelpers<RegisterFormValues>
+  ) => {
+    setIsLoading(true);
+    setEmailError('');
+    setMessageError('');
+    console.log('Datos de registro:', values);
+    try {
+      //await new Promise(resolve => setTimeout(resolve, 2000));
+
+      if (values.email === 'existing@example.com') {
+        console.log('Correo ya registrado:', values.email);
+        setFieldError('email', 'Este correo ya está registrado');
+        setEmailError('Este correo ya está registrado');
+        setApiError(true);
+        setMessageError('Este correo ya está registrado');
+      } else {
+        console.log('Registro exitoso:', values);
+        // Here you would typically make an API call to register the user
+        // If successful, you might want to navigate to a success screen or login
+        setApiError(true);
+        setMessageError('Error durante el registro. Por favor, inténtalo de nuevo.');
+      }
+    } catch (error) {
+      console.error('Error during registration:', error);
+      setApiError(true);
+      setMessageError('Error durante el registro. Por favor, inténtalo de nuevo.');
+      // Handle any errors here
+    } finally {
+      setIsLoading(false);
+      setSubmitting(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      <LinearGradient
-        colors={['#e8f5e9', '#c8e6c9']}
-        style={styles.gradient}
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.keyboardAvoidingView}
-        >
+      <LinearGradient colors={['#e8f5e9', '#c8e6c9']} style={styles.gradient}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.keyboardAvoidingView}>
           <ScrollView contentContainerStyle={styles.scrollView}>
             <View style={styles.logoContainer}>
               <Image
@@ -54,11 +84,11 @@ export default function RegisterScreen() {
             </View>
 
             <Formik
-              initialValues={{ fullName: '', email: '', password: '', department: '', town: '' }}
+              initialValues={{ fullName: '', email: '', password: '', confirmPassword: '', department: '', town: '' }}
               validationSchema={validationSchema}
-              onSubmit={handleRegister}
+              onSubmit={handleSubmit}
             >
-              {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
+              {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting }) => (
                 <View style={styles.formContainer}>
                   <Input
                     placeholder="Nombre Completo"
@@ -78,7 +108,7 @@ export default function RegisterScreen() {
                     onChangeText={handleChange('email')}
                     onBlur={handleBlur('email')}
                     value={values.email}
-                    errorMessage={touched.email && errors.email ? errors.email : ''}
+                    errorMessage={(touched.email && errors.email) || emailError ? (errors.email || emailError) : ''}
                     leftIcon={<Feather name="mail" size={24} color="#4CAF50" />}
                     inputContainerStyle={styles.inputContainer}
                     inputStyle={styles.input}
@@ -95,8 +125,18 @@ export default function RegisterScreen() {
                     inputStyle={styles.input}
                   />
                   <Input
+                    placeholder="Confirmar Contraseña"
+                    secureTextEntry
+                    onChangeText={handleChange('confirmPassword')}
+                    onBlur={handleBlur('confirmPassword')}
+                    value={values.confirmPassword}
+                    errorMessage={touched.confirmPassword && errors.confirmPassword ? errors.confirmPassword : ''}
+                    leftIcon={<Feather name="lock" size={24} color="#4CAF50" />}
+                    inputContainerStyle={styles.inputContainer}
+                    inputStyle={styles.input}
+                  />
+                  <Input
                     placeholder="Departamento"
-                    keyboardType="default"
                     onChangeText={handleChange('department')}
                     onBlur={handleBlur('department')}
                     value={values.department}
@@ -107,7 +147,6 @@ export default function RegisterScreen() {
                   />
                   <Input
                     placeholder="Ciudad"
-                    keyboardType="default"
                     onChangeText={handleChange('town')}
                     onBlur={handleBlur('town')}
                     value={values.town}
@@ -118,10 +157,14 @@ export default function RegisterScreen() {
                   />
 
                   <Button
-                    title="Registrarse"
+                    title={isLoading ? "Guardando..." : "Registrarse"}
                     onPress={() => handleSubmit()}
                     buttonStyle={styles.registerButton}
                     titleStyle={styles.buttonTitle}
+                    disabled={isSubmitting || isLoading}
+                    icon={isLoading ? (
+                      <ActivityIndicator size="small" color="#ffffff" style={styles.loader} />
+                    ) : undefined}
                   />
 
                   <Button
@@ -136,8 +179,27 @@ export default function RegisterScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       </LinearGradient>
+      <Modal
+        transparent={true}
+        animationType="fade"
+        visible={apiError}
+        onRequestClose={() => setApiError(false)}
+      >
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalTitle}>Error</Text>
+            <Text style={styles.modalText}>{messageError}</Text>
+            <Button
+              title="Cerrar"
+              onPress={() => setApiError(false)}
+              buttonStyle={styles.modalButton}
+              titleStyle={styles.modalButtonText}
+            />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -201,4 +263,53 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-})
+  loader: {
+    marginRight: 10,
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 35,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5
+  },
+  modalTitle: {
+    marginBottom: 15,
+    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fd3d13',
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: 'center',
+    fontSize: 16,
+  },
+  modalButton: {
+    backgroundColor: '#4CAF50',
+    borderRadius: 25,
+    marginTop: 20,
+    paddingVertical: 12,
+    elevation: 2,
+    minWidth: 100,
+  },
+  modalButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: 'rgba(0,0,0,0.5)'
+  }
+});
