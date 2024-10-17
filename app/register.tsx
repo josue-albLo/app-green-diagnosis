@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
 import { Feather } from '@expo/vector-icons';
+import axios from 'axios';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Formik, FormikHelpers } from 'formik';
-import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View, ActivityIndicator, Modal } from 'react-native';
+import React, { useState } from 'react';
+import { ActivityIndicator, Image, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Button, Input } from 'react-native-elements';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Yup from 'yup';
+import { SecurityKeys } from '../enums/security-keys.enum';
+import { setItem } from '../helper/storage';
 
 interface RegisterFormValues {
   fullName: string;
@@ -34,6 +37,17 @@ export default function RegisterScreen() {
   const [emailError, setEmailError] = useState('');
   const [apiError, setApiError] = useState(false);
   const [messageError, setMessageError] = useState('');
+  const emailIsRegistered = 'email-already-registered';
+
+  const buildDataSignUp = (values: RegisterFormValues) => {
+    return {
+      email: values.email,
+      password: values.password,
+      full_name: values.fullName,
+      department: values.department,
+      town: values.town,
+    }
+  }
 
   const handleSubmit = async (
     values: RegisterFormValues,
@@ -42,28 +56,33 @@ export default function RegisterScreen() {
     setIsLoading(true);
     setEmailError('');
     setMessageError('');
-    console.log('Datos de registro:', values);
+    const url = `${process.env.EXPO_PUBLIC_API_GATEWAY_AUTH_URL}/signup`;
+    const data = buildDataSignUp(values);
     try {
-      //await new Promise(resolve => setTimeout(resolve, 2000));
+      const res = await axios.post(url, data, {
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
 
-      if (values.email === 'existing@example.com') {
-        console.log('Correo ya registrado:', values.email);
-        setFieldError('email', 'Este correo ya está registrado');
-        setEmailError('Este correo ya está registrado');
-        setApiError(true);
-        setMessageError('Este correo ya está registrado');
-      } else {
-        console.log('Registro exitoso:', values);
-        // Here you would typically make an API call to register the user
-        // If successful, you might want to navigate to a success screen or login
+      if (res.status === 200) {
+        const token = res.data['access_token'] ?? '';
+        setItem(SecurityKeys.ACCESS_TOKEN, token);
+        setItem(SecurityKeys.USER, values.email);
+        router.replace('/(tabs)/home');
+      }
+      else {
         setApiError(true);
         setMessageError('Error durante el registro. Por favor, inténtalo de nuevo.');
       }
     } catch (error) {
-      console.error('Error during registration:', error);
-      setApiError(true);
-      setMessageError('Error durante el registro. Por favor, inténtalo de nuevo.');
-      // Handle any errors here
+
+      if (axios.isAxiosError(error)) {
+        if (error.response?.data['error'] === emailIsRegistered) {
+          setFieldError('email', 'Este correo ya está registrado');
+          setEmailError('Este correo ya está registrado');
+        }
+      }
     } finally {
       setIsLoading(false);
       setSubmitting(false);
