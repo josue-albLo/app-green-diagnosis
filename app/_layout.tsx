@@ -48,6 +48,10 @@ export default function RootLayout() {
           name="help-and-support"
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="image-result"
+          options={{ headerShown: false }}
+        />
         {/* Define la navegación por tabs */}
         <Stack.Screen
           name="(tabs)"
