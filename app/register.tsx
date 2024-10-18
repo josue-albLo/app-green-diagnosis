@@ -91,7 +91,7 @@ export default function RegisterScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <LinearGradient colors={['#e8f5e9', '#c8e6c9']} style={styles.gradient}>
+      <LinearGradient colors={['#e8f5e9', '#46af4e']} style={styles.gradient}>
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.keyboardAvoidingView}>
           <ScrollView contentContainerStyle={styles.scrollView}>
             <View style={styles.logoContainer}>

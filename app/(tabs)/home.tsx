@@ -299,7 +299,7 @@ export default function Component(): JSX.Element {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
       <LinearGradient
-        colors={['#e8f5e9', '#c8e6c9']}
+        colors={['#c8e6c9', '#46af4e']}
         style={styles.gradient}
       >
         <View style={styles.content}>

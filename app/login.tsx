@@ -9,7 +9,7 @@ import { Button, Input } from 'react-native-elements'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import * as Yup from 'yup'
 import { setItem } from '../helper/storage'
-import {SecurityKeys} from '../enums/security-keys.enum';
+import { SecurityKeys } from '../enums/security-keys.enum';
 
 interface LoginFormValues {
   email: string
@@ -51,7 +51,10 @@ export default function LoginScreen() {
       }
     } catch (error) {
       console.log('Error:', error);
-      setErrorMessage('Credenciales incorrectas. Por favor, inténtalo de nuevo.');
+      setErrorMessage('Credenciales incorrectas.\nPor favor, inténtalo de nuevo.');
+      setTimeout(() => {
+        setErrorMessage('');
+      }, 5000)
     } finally {
       setIsLoading(false);
     }
@@ -60,7 +63,7 @@ export default function LoginScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient
-        colors={['#e8f5e9', '#c8e6c9']}
+        colors={['#46af4e', '#46af4e']}
         style={styles.gradient}
       >
         <KeyboardAvoidingView
@@ -172,7 +175,7 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#2e7d32',
+    color: '#ffffff',
     marginTop: 10,
   },
   formContainer: {

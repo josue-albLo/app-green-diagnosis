@@ -34,7 +34,7 @@ export default function HelpSupportScreen() {
         <View style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
             <LinearGradient
-                colors={['#e8f5e9', '#c8e6c9']}
+                colors={['#e8f5e9', '#46af4e']}
                 style={styles.gradient}
             >
                 <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
