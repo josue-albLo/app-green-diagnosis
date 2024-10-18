@@ -1,30 +1,27 @@
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { Dimensions, Image, Platform, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
 const { width, height } = Dimensions.get('window');
 
 export interface ResultProps {
     image: string;
     disease: string;
+    plant: string;
     probability: string;
+    description: string;
     recommendations: string[];
 }
 
 export default function ImageResult() {
-    // Dummy data - replace with actual data from your image processing
-    const result: ResultProps = {
-        image: 'https://media.istockphoto.com/id/483451251/es/foto/ataque-mic%C3%B3tica.jpg?s=2048x2048&w=is&k=20&c=v9dmGBOVtBxccfjNIwreybPr5BYvJHSvK17SBpD87XE=',
-        disease: 'Sample Disease',
-        probability: '85%',
-        recommendations: [
-            'Rest and hydration',
-            'Consult with a doctor',
-            'Follow prescribed medication'
-        ]
-    };
+    const params = useLocalSearchParams();
+    const result: ResultProps = JSON.parse(params?.result as string);
+    console.log({ result });
+    if (!result) {
+        router.replace('/home');
+        return null;
+    }
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -45,13 +42,15 @@ export default function ImageResult() {
                             resizeMode="cover"
                         />
                         <View style={styles.infoContainer}>
-                            <Text style={styles.diseaseText}>Enfermedad: {result.disease}</Text>
-                            <Text style={styles.probabilityText}>Probabilidad: {result.probability}</Text>
+                            <Text style={styles.diseaseText}>Planta: {result?.plant ?? ''}</Text>
+                            <Text style={styles.diseaseText}>Enfermedad: {result?.disease ?? ''}</Text>
+                            <Text style={styles.probabilityText}>Descripción: {result?.description ?? ''}</Text>
+                            <Text style={styles.probabilityText}>Probabilidad: {result?.probability ?? ''}</Text>
                         </View>
                         <View style={styles.recommendationsContainer}>
                             <Text style={styles.recommendationsTitle}>Recomendaciones:</Text>
                             {result.recommendations.map((rec, index) => (
-                                <Text key={index} style={styles.recommendationItem}>• {rec}</Text>
+                                <Text key={index} style={styles?.recommendationItem ?? ''}>• {rec}</Text>
                             ))}
                         </View>
                     </View>

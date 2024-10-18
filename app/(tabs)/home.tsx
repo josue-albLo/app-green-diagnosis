@@ -3,11 +3,13 @@ import { Camera } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
+import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 
 import {
   ActivityIndicator,
   Alert,
+  Button,
   Dimensions,
   ImageBackground,
   Modal,
@@ -192,6 +194,18 @@ export default function Component(): JSX.Element {
   const defaultBackground = require('./../../assets/public/images/imgBack.jpg');
   const ApiKey = process.env.EXPO_PUBLIC_API_KEY_OPEN_WEATHER_MAP;
   const [errorWeather, setErrorWeather] = useState<string | null>(null);
+  const [isErrorModalVisible, setIsErrorModalVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const showErrorModal = (message: string): void => {
+    setErrorMessage(message);
+    setIsErrorModalVisible(true);
+  };
+
+  const hideErrorModal = (): void => {
+    setErrorMessage(null);
+    setIsErrorModalVisible(false);
+  };
 
   const [weather, setWeather] = useState<WeatherData | null>(null);
 
@@ -289,9 +303,34 @@ export default function Component(): JSX.Element {
 
   const processImage = (): void => {
     setIsLoading(true);
+    const isError = false;
     setTimeout(() => {
-      setIsLoading(false);
-      Alert.alert('Procesamiento completado', 'La imagen ha sido procesada exitosamente.');
+      if (isError) {
+        showErrorModal('Error al procesar la imagen.');
+        setIsLoading(false);
+      }
+      else {
+        if (!image) {
+          showErrorModal('No se ha seleccionado ninguna imagen.');
+          setIsLoading(false);
+          return;
+        }
+        // Procesar la imagen
+        const data = {
+          image,
+          plant: 'Sample Plant',
+          disease: 'Sample Disease',
+          description: 'This is a sample description of the disease. It is a long text that describes the disease in detail.',
+          probability: '85%',
+          recommendations: [
+            'Rest and hydration',
+            'Consult with a doctor',
+            'Follow prescribed medication'
+          ]
+        }
+        setIsLoading(false);
+        router.push({ pathname: '/image-result', params: { result: JSON.stringify(data) } });
+      }
     }, 3000);
   };
 
@@ -371,6 +410,20 @@ export default function Component(): JSX.Element {
           </View>
         </View>
       </Modal>
+      <Modal
+        transparent={true}
+        animationType="slide"
+        visible={isErrorModalVisible}
+        onRequestClose={hideErrorModal}
+      >
+        <View style={styles.centeredView}>
+          <View style={styles.errorModalView}>
+            <Text style={styles.modalText}>Error</Text>
+            <Text style={styles.modalText}>{errorMessage}</Text>
+            <Button title="Cerrar" onPress={() => hideErrorModal()} />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -396,6 +449,20 @@ const styles = StyleSheet.create({
   },
   menuButton: {
     padding: 10,
+  },
+  errorModalView: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 35,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
   weatherContainer: {
     flexDirection: 'row',

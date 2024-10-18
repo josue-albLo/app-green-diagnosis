@@ -57,6 +57,10 @@ export default function RootLayout() {
           name="(tabs)"
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="diagnosis-details"
+          options={{ headerShown: false }}
+        />
         {/* Define una pantalla para rutas no encontradas */}
         <Stack.Screen name="+not-found" options={{ title: 'Not Found' }} />
       </Stack>

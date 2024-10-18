@@ -1,22 +1,41 @@
-import React, { useState, useRef } from 'react';
-import {
-  View, Text, StyleSheet, FlatList, Image, TouchableOpacity,
-  Dimensions, Animated, StatusBar, Platform
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import { Feather } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
+import React, { useRef, useState } from 'react';
+import {
+  Animated,
+  Dimensions,
+  Image,
+  Platform,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width, height } = Dimensions.get('window');
 
-// Updated simulated data for the analysis history
-const historyData = [
+export interface HistoryProps {
+  id: string;
+  plant: string;
+  date: string;
+  disease: string;
+  probability: string;
+  recommendations: string[];
+  description: string;
+  image: string;
+}
+
+const historyData: HistoryProps[] = [
   {
     id: '1',
     plant: 'Tomato',
     date: '2024-09-25',
     disease: 'Leaf Spot',
+    probability: '85%',
+    recommendations: ['Remove infected leaves', 'Apply fungicide spray'],
     description: 'Circular brown spots on leaves, potentially causing defoliation.',
     image: 'https://images.unsplash.com/photo-1592841200221-a6898f307baa?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fHRvbWF0byUyMHBsYW50fGVufDB8fDB8fHww'
   },
@@ -25,6 +44,8 @@ const historyData = [
     plant: 'Potato',
     date: '2024-09-24',
     disease: 'Late Blight',
+    probability: '90%',
+    recommendations: ['Remove infected plants', 'Apply fungicide spray'],
     description: 'Water-soaked spots on leaves, stems, and tubers, leading to rapid plant death.',
     image: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cG90YXRvJTIwcGxhbnR8ZW58MHx8MHx8fDA%3D'
   },
@@ -33,6 +54,8 @@ const historyData = [
     plant: 'Strawberry',
     date: '2024-09-23',
     disease: 'Powdery Mildew',
+    probability: '75%',
+    recommendations: ['Remove infected leaves', 'Apply fungicide spray'],
     description: 'White powdery coating on leaves, reducing plant vigor and fruit quality.',
     image: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c3RyYXdiZXJyeSUyMHBsYW50fGVufDB8fDB8fHww'
   },
@@ -41,6 +64,8 @@ const historyData = [
     plant: 'Cucumber',
     date: '2024-09-22',
     disease: 'Downy Mildew',
+    probability: '80%',
+    recommendations: ['Remove infected leaves', 'Apply fungicide spray'],
     description: 'Yellow spots on leaf surfaces with fuzzy gray growth underneath.',
     image: 'https://images.unsplash.com/photo-1628784230353-5bee16e2f005?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y3VjdW1iZXIlMjBwbGFudHxlbnwwfHwwfHx8MA%3D%3D'
   },
@@ -49,6 +74,8 @@ const historyData = [
     plant: 'Pepper',
     date: '2024-09-21',
     disease: 'Bacterial Spot',
+    probability: '70%',
+    recommendations: ['Remove infected leaves', 'Apply copper-based fungicide'],
     description: 'Small, dark, raised spots on leaves, stems, and fruits.',
     image: 'https://images.unsplash.com/photo-1635178792420-c9eda4e3d2e0?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cGVwcGVyJTIwcGxhbnR8ZW58MHx8MHx8fDA%3D'
   },
@@ -58,7 +85,12 @@ export default function AnalysisHistoryScreen() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const animatedValue = useRef(new Animated.Value(0)).current;
 
-  const renderHistoryItem = ({ item, index }: any) => {
+  const goToDetails = (diagnosticParam: HistoryProps) => {
+    if (!diagnosticParam) return;
+    router.push({ pathname: '/diagnosis-details', params: { diagnosis: JSON.stringify(diagnosticParam) } });
+  };
+
+  const renderHistoryItem = ({ item, index }: { item: HistoryProps; index: number }) => {
     const isSelected = item.id === selectedId;
     const inputRange = [
       -1,
@@ -86,19 +118,21 @@ export default function AnalysisHistoryScreen() {
         >
           <Image source={{ uri: item.image }} style={styles.plantImage} />
           <LinearGradient
-            colors={['rgba(0,100,0,0.6)', 'transparent']}
+            colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.3)', 'transparent']}
             style={styles.gradient}
           />
           <View style={styles.cardContent}>
-            <Text style={styles.cardTitle}>{item.plant}</Text>
-            <Text style={styles.cardDate}>{item.date}</Text>
-            <Text style={styles.cardDisease}>{item.disease}</Text>
+            <BlurView intensity={0} tint="dark" style={styles.textBackground}>
+              <Text style={styles.cardTitle}>{item.plant}</Text>
+              <Text style={styles.cardDate}>{item.date}</Text>
+              <Text style={styles.cardDisease}>{item.disease}</Text>
+            </BlurView>
           </View>
           {isSelected && (
             <BlurView intensity={80} tint="dark" style={styles.blurView}>
               <Text style={styles.descriptionText}>{item.description}</Text>
-              <TouchableOpacity style={styles.detailsButton}>
-                <Text style={styles.detailsButtonText}>View Full Analysis</Text>
+              <TouchableOpacity style={styles.detailsButton} onPress={() => goToDetails(item)}>
+                <Text style={styles.detailsButtonText}>Ver análisis completo</Text>
               </TouchableOpacity>
             </BlurView>
           )}
@@ -115,7 +149,7 @@ export default function AnalysisHistoryScreen() {
         style={styles.container}
       >
         <View style={styles.header}>
-          <Text style={styles.headerText}>Historial de Analisis</Text>
+          <Text style={styles.headerText}>Historial de Análisis</Text>
         </View>
 
         <Animated.FlatList
@@ -145,24 +179,16 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     paddingHorizontal: 20,
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     paddingBottom: 10,
   },
-  backButton: {
-    padding: 10,
-  },
   headerText: {
-    flex: 1,
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#46af4e',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  filterButton: {
-    padding: 10,
+    color: '#4CAF50',
+    textAlign: 'center',
   },
   listContent: {
     padding: 20,
@@ -191,8 +217,13 @@ const styles = StyleSheet.create({
   },
   cardContent: {
     flex: 1,
-    padding: 15,
     justifyContent: 'flex-end',
+    padding: 15,
+  },
+  textBackground: {
+    borderRadius: 20,
+    padding: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
   },
   cardTitle: {
     fontSize: 22,
