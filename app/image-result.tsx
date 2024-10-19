@@ -1,3 +1,4 @@
+import { DiseaseRequest } from '@/interfaces/disease.interface';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -5,18 +6,9 @@ import React from 'react';
 import { Dimensions, Image, Platform, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 const { width, height } = Dimensions.get('window');
 
-export interface ResultProps {
-    image: string;
-    disease: string;
-    plant: string;
-    probability: string;
-    description: string;
-    recommendations: string[];
-}
-
 export default function ImageResult() {
     const params = useLocalSearchParams();
-    const result: ResultProps = JSON.parse(params?.result as string);
+    const result: DiseaseRequest = JSON.parse(params?.result as string);
     console.log({ result });
     if (!result) {
         router.replace('/home');

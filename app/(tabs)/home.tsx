@@ -29,6 +29,8 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
+import diseases from '../../data/diseases.json';
+import { DiseaseInfo } from '@/interfaces/disease.interface';
 
 const { width, height } = Dimensions.get('window');
 
@@ -45,7 +47,6 @@ const AnimatedFeather = Animated.createAnimatedComponent(Feather);
 const SunnyAnimation: React.FC = () => {
   const rotation = useSharedValue(0);
   const scale = useSharedValue(1);
-
   useEffect(() => {
     rotation.value = withRepeat(
       withTiming(360, { duration: 10000, easing: Easing.linear }),
@@ -196,6 +197,9 @@ export default function Component(): JSX.Element {
   const [errorWeather, setErrorWeather] = useState<string | null>(null);
   const [isErrorModalVisible, setIsErrorModalVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const diseaseInfo: DiseaseInfo[] = diseases;
+
+
 
   const showErrorModal = (message: string): void => {
     setErrorMessage(message);

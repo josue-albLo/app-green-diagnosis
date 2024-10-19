@@ -1,3 +1,4 @@
+import { DiagnosticHistory } from '@/interfaces/disease.interface';
 import { Feather } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -24,20 +25,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width, height } = Dimensions.get('window');
 
-interface HistoryProps {
-    id: string;
-    plant: string;
-    date: string;
-    disease: string;
-    probability: string;
-    recommendations: string[];
-    description: string;
-    image: string;
-}
-
 export default function DiagnosisDetailsScreen() {
     const params = useLocalSearchParams();
-    const diagnosis: HistoryProps = JSON.parse(params?.diagnosis as string);
+    const diagnosis: DiagnosticHistory = JSON.parse(params?.diagnosis as string);
     const scrollY = useSharedValue(0);
 
     if (!diagnosis) {

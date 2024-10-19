@@ -1,0 +1,112 @@
+[
+  {
+    "id": "1",
+    "disease": "Mancha de Asfalto en Maíz",
+    "description": "Enfermedad causada por el hongo Phyllachora maydis, que produce manchas negras en las hojas, afectando la fotosíntesis y el rendimiento del cultivo.",
+    "recommendations": [
+      "Aplicar fungicidas sistémicos como propiconazol o carbendazín en las etapas tempranas.",
+      "Utilizar mezclas de fungicidas para evitar resistencia, como poxiconazol + carbendazín.",
+      "Implementar rotación de cultivos para reducir la acumulación del hongo en el suelo.",
+      "Usar Trichoderma harzianum, un hongo benéfico que combate patógenos al competir por nutrientes."
+    ]
+  },
+  {
+    "id": "2",
+    "disease": "Mancha Foliar en Frijol",
+    "description": "Enfermedad causada por hongos que provocan manchas en las hojas, afectando la capacidad fotosintética y el desarrollo de la planta.",
+    "recommendations": [
+      "Usar fungicidas como clorotalonil o mancozeb para controlar la infección.",
+      "Aplicar productos a base de cobre en las etapas tempranas.",
+      "Implementar rotación de cultivos para prevenir la acumulación de esporas.",
+      "Mejorar la ventilación y reducir la humedad en el follaje mediante prácticas de poda."
+    ]
+  },
+  {
+    "id": "3",
+    "disease": "Roya en Frijol y Café",
+    "description": "Enfermedad fúngica que causa pústulas de color marrón rojizo en las hojas, afectando la fotosíntesis y el rendimiento.",
+    "recommendations": [
+      "Aplicar fungicidas sistémicos como triazoles y estrobilurinas.",
+      "Usar productos a base de mancozeb para frenar el avance de la roya.",
+      "Eliminar plantas y hojas infectadas para evitar la propagación.",
+      "Aplicar compost de hongos beneficiosos para aumentar la resistencia natural."
+    ]
+  },
+  {
+    "id": "4",
+    "disease": "Virus del Mosaico en Frijol",
+    "description": "Enfermedad viral que causa patrones de mosaico en las hojas, deformaciones y reducción en el crecimiento.",
+    "recommendations": [
+      "Usar insecticidas específicos para controlar vectores como pulgones.",
+      "Aplicar tratamientos preventivos con aceites minerales para reducir la transmisión.",
+      "Implementar barreras vegetales para reducir la incidencia de insectos.",
+      "Usar extractos de neem para repeler insectos y disminuir la transmisión del virus."
+    ]
+  },
+  {
+    "id": "5",
+    "disease": "Cancro de los Cítricos",
+    "description": "Enfermedad bacteriana que causa lesiones en hojas, frutos y ramas, reduciendo la productividad de la planta.",
+    "recommendations": [
+      "Aplicar productos a base de cobre para controlar la bacteria.",
+      "Eliminar y destruir las plantas infectadas para evitar la propagación.",
+      "Poda regular y desinfección de herramientas para prevenir la enfermedad.",
+      "Implementar un control biológico con bacterias antagonistas."
+    ]
+  },
+  {
+    "id": "6",
+    "disease": "Mancha Negra de los Cítricos",
+    "description": "Enfermedad fúngica que produce manchas negras en las hojas y frutos, afectando la calidad y cantidad de la cosecha.",
+    "recommendations": [
+      "Aplicar fungicidas específicos para el control del hongo.",
+      "Eliminar restos de poda y frutos caídos para reducir el inóculo.",
+      "Usar variedades resistentes si están disponibles.",
+      "Mejorar la ventilación del cultivo para reducir la humedad."
+    ]
+  },
+  {
+    "id": "7",
+    "disease": "Enverdecimiento de los Cítricos",
+    "description": "Enfermedad bacteriana transmitida por insectos que causa amarillamiento de hojas y reducción en el tamaño de los frutos.",
+    "recommendations": [
+      "Aplicar insecticidas para controlar el psílido asiático de los cítricos.",
+      "Eliminar árboles infectados para evitar la propagación.",
+      "Implementar un programa de monitoreo y control biológico.",
+      "Usar cultivos trampa para reducir la población de vectores."
+    ]
+  },
+  {
+    "id": "8",
+    "disease": "Melanosa Cítrica",
+    "description": "Enfermedad fúngica que produce lesiones oscuras en las hojas, ramas y frutos, afectando la calidad comercial de los cítricos.",
+    "recommendations": [
+      "Podar y eliminar ramas y hojas infectadas.",
+      "Aplicar fungicidas en las etapas tempranas de la infección.",
+      "Mejorar la ventilación para reducir la humedad en el follaje.",
+      "Utilizar compost para mejorar la resistencia natural de las plantas."
+    ]
+  },
+  {
+    "id": "9",
+    "disease": "Phoma Cítricos",
+    "description": "Enfermedad fúngica que afecta las hojas y ramas, produciendo manchas marrones y necrosis.",
+    "recommendations": [
+      "Aplicar fungicidas específicos para Phoma.",
+      "Eliminar hojas y ramas infectadas.",
+      "Mejorar la ventilación para reducir la humedad.",
+      "Utilizar extractos de plantas para fortalecer la resistencia."
+    ]
+  },
+  {
+    "id": "10",
+    "disease": "Mancha Angular de Hojas en Frijoles",
+    "description": "Enfermedad bacteriana que provoca manchas angulares en las hojas y reduce la fotosíntesis.",
+    "recommendations": [
+      "Aplicar productos a base de cobre para controlar la enfermedad.",
+      "Rotar cultivos para reducir la incidencia de la bacteria.",
+      "Eliminar restos de cultivo y residuos para evitar la propagación.",
+      "Usar extractos orgánicos para fortalecer la resistencia natural."
+    ]
+  }
+]

@@ -10,15 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Yup from 'yup';
 import { SecurityKeys } from '../enums/security-keys.enum';
 import { setItem } from '../helper/storage';
-
-interface RegisterFormValues {
-  fullName: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  department: string;
-  town: string;
-}
+import { RegisterFormValues } from '@/interfaces/user.interface';
 
 const validationSchema = Yup.object().shape({
   fullName: Yup.string().required('El nombre completo es requerido'),

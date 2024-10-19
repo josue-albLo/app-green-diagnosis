@@ -7,10 +7,8 @@ import * as Yup from 'yup'
 import { Input, Button } from 'react-native-elements'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Feather } from '@expo/vector-icons'
+import { ForgotPasswordFormValues } from '@/interfaces/user.interface'
 
-interface ForgotPasswordFormValues {
-  email: string
-}
 
 const validationSchema = Yup.object().shape({
   email: Yup.string().email('Correo inválido').required('El correo es requerido'),

@@ -10,11 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import * as Yup from 'yup'
 import { setItem } from '../helper/storage'
 import { SecurityKeys } from '../enums/security-keys.enum';
-
-interface LoginFormValues {
-  email: string
-  password: string
-}
+import { LoginFormValues } from '@/interfaces/user.interface'
 
 const validationSchema = Yup.object().shape({
   email: Yup.string().email('Correo inválido').required('El correo es requerido'),

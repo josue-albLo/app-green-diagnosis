@@ -1,3 +1,4 @@
+import { DiagnosticHistory } from '@/interfaces/disease.interface';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -17,18 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width, height } = Dimensions.get('window');
 
-export interface HistoryProps {
-  id: string;
-  plant: string;
-  date: string;
-  disease: string;
-  probability: string;
-  recommendations: string[];
-  description: string;
-  image: string;
-}
-
-const historyData: HistoryProps[] = [
+const historyData: DiagnosticHistory[] = [
   {
     id: '1',
     plant: 'Tomato',
@@ -85,12 +75,12 @@ export default function AnalysisHistoryScreen() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const animatedValue = useRef(new Animated.Value(0)).current;
 
-  const goToDetails = (diagnosticParam: HistoryProps) => {
+  const goToDetails = (diagnosticParam: DiagnosticHistory) => {
     if (!diagnosticParam) return;
     router.push({ pathname: '/diagnosis-details', params: { diagnosis: JSON.stringify(diagnosticParam) } });
   };
 
-  const renderHistoryItem = ({ item, index }: { item: HistoryProps; index: number }) => {
+  const renderHistoryItem = ({ item, index }: { item: DiagnosticHistory; index: number }) => {
     const isSelected = item.id === selectedId;
     const inputRange = [
       -1,
