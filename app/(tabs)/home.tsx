@@ -1,3 +1,4 @@
+import { DiseaseInfo, DiseaseRequest } from '@/interfaces/disease.interface';
 import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Camera } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
@@ -5,7 +6,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-
 import {
   ActivityIndicator,
   Alert,
@@ -29,8 +29,8 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
+import { uploadDiagnosticToCloud } from '../../api/diagnosis.api';
 import diseases from '../../data/diseases.json';
-import { DiseaseInfo } from '@/interfaces/disease.interface';
 
 const { width, height } = Dimensions.get('window');
 
@@ -199,7 +199,21 @@ export default function Component(): JSX.Element {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const diseaseInfo: DiseaseInfo[] = diseases;
 
-
+  const buildFakeData = (): DiseaseRequest => {
+    return {
+      image: 'https://via.placeholder.com/150',
+      email: 'sample@example.com',
+      plant: 'Sample Plant',
+      disease: 'Sample Disease',
+      description: 'This is a sample description of the disease. It is a long text that describes the disease in detail.',
+      probability: '85%',
+      recommendations: [
+        'Rest and hydration',
+        'Consult with a doctor',
+        'Follow prescribed medication'
+      ]
+    }
+  }
 
   const showErrorModal = (message: string): void => {
     setErrorMessage(message);
@@ -232,6 +246,16 @@ export default function Component(): JSX.Element {
     } catch (error) {
       Alert.alert('Error', 'No se pudo obtener la información del clima.');
     }
+  }
+
+  const upData = () => {
+    const fakData = buildFakeData();
+    uploadDiagnosticToCloud('token', fakData)
+      .then((res) => {
+        console.log(res);
+      }).catch((err) => {
+        console.log(err);
+      });
   }
 
   useEffect(() => {
@@ -306,6 +330,8 @@ export default function Component(): JSX.Element {
   };
 
   const processImage = (): void => {
+    upData();
+    return;
     setIsLoading(true);
     const isError = false;
     setTimeout(() => {

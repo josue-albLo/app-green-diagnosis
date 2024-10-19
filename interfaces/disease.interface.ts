@@ -6,6 +6,7 @@ export interface DiseaseInfo {
 }
 export interface DiseaseRequest {
     image: string;
+    email: string;
     disease: string;
     plant: string;
     probability: string;
@@ -23,3 +24,4 @@ export interface DiagnosticHistory {
     description: string;
     image: string;
 }
+
