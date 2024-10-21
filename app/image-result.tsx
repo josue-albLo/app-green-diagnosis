@@ -1,4 +1,4 @@
-import { DiseaseRequest } from '@/interfaces/disease.interface';
+import { DiseaseResponse } from '@/interfaces/disease.interface';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -8,12 +8,18 @@ const { width, height } = Dimensions.get('window');
 
 export default function ImageResult() {
     const params = useLocalSearchParams();
-    const result: DiseaseRequest = JSON.parse(params?.result as string);
-    console.log({ result });
-    if (!result) {
+    const data = JSON.parse(params?.result as string);
+    console.log({ data });
+    if (!data) {
         router.replace('/home');
         return null;
     }
+    if (data?.status_code) {
+        router.replace('/home');
+        return null;
+    }
+
+    const result = data as DiseaseResponse;
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -42,7 +48,7 @@ export default function ImageResult() {
                         <View style={styles.recommendationsContainer}>
                             <Text style={styles.recommendationsTitle}>Recomendaciones:</Text>
                             {result.recommendations.map((rec, index) => (
-                                <Text key={index} style={styles?.recommendationItem ?? ''}>• {rec}</Text>
+                                <Text key={rec.split('')[0]} style={styles?.recommendationItem ?? ''}>• {rec}</Text>
                             ))}
                         </View>
                     </View>

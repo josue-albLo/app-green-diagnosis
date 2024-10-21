@@ -5,8 +5,8 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import { Formik } from 'formik'
 import React, { useEffect, useState } from 'react'
-import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, View } from 'react-native'
-import { Button, Input, Text } from 'react-native-elements'
+import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, View, Text } from 'react-native'
+import { Button, Input } from 'react-native-elements'
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import * as Yup from 'yup'
@@ -152,7 +152,7 @@ export default function ProfileForm() {
                                     onPress={() => router.back()}
                                     type="clear"
                                 />
-                                <Text h4 style={styles.headerText}>{userProfileText ?? ''}</Text>
+                                <Text style={styles.headerText}>{userProfileText ?? ''}</Text>
                             </View>
 
                             <View style={styles.avatarContainer}>
