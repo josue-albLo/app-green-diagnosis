@@ -3,18 +3,27 @@ import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
-import { Dimensions, Image, Platform, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+    Dimensions,
+    Image,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
+} from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+
 const { width, height } = Dimensions.get('window');
 
 export default function ImageResult() {
     const params = useLocalSearchParams();
     const data = JSON.parse(params?.result as string);
-    console.log({ data });
-    if (!data) {
-        router.replace('/home');
-        return null;
-    }
-    if (data?.status_code) {
+
+    if (!data || data?.status_code) {
         router.replace('/home');
         return null;
     }
@@ -23,53 +32,73 @@ export default function ImageResult() {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+            <StatusBar barStyle="light-content" backgroundColor="#4caf50" translucent />
             <LinearGradient
-                colors={['#e8f5e9', '#46af4e']}
+                colors={['#4caf50', '#45a049']}
                 style={styles.gradient}
             >
-                <View style={styles.content}>
-                    <View style={styles.header}>
-                        <Text style={styles.headerText}>Resultado del Procesamiento</Text>
-                    </View>
+                <ScrollView contentContainerStyle={styles.scrollContent}>
+                    <View style={styles.content}>
+                        <Animated.View entering={FadeInDown.delay(200).duration(1000)} style={styles.card}>
+                            <View style={styles.imageContainer}>
+                                <Image
+                                    source={{ uri: result.image }}
+                                    style={styles.image}
+                                    resizeMode="cover"
+                                />
+                                <LinearGradient
+                                    colors={['transparent', 'rgba(0,0,0,0.7)']}
+                                    style={styles.imageOverlay}
+                                >
+                                    <Text style={styles.plantName}>{result?.plant ?? ''}</Text>
+                                    <Text style={styles.diseaseName}>{result?.disease ?? ''}</Text>
+                                </LinearGradient>
+                            </View>
+                            <View style={styles.infoContainer}>
+                                <View style={styles.probabilityContainer}>
+                                    <Text style={styles.probabilityText}>Probabilidad:</Text>
+                                    <View style={styles.probabilityBar}>
+                                        <LinearGradient
+                                            colors={['#4caf50', '#8bc34a']}
+                                            style={[styles.probabilityFill, { width: `${parseFloat(result?.probability ?? '0') * 100}%` }]}
+                                        />
+                                    </View>
+                                    <Text style={styles.probabilityValue}>{result?.probability ?? ''}</Text>
+                                </View>
+                                <View style={styles.sectionContainer}>
+                                    <Text style={styles.sectionTitle}>Descripción</Text>
+                                    <Text style={styles.sectionText}>{result?.description ?? ''}</Text>
+                                </View>
+                                <View style={styles.sectionContainer}>
+                                    <Text style={styles.sectionTitle}>Recomendaciones</Text>
+                                    {result.recommendations.map((rec, index) => (
+                                        <View key={index} style={styles.recommendationItem}>
+                                            <Feather name="check-circle" size={20} color="#4caf50" style={styles.recommendationIcon} />
+                                            <Text style={styles.recommendationText}>{rec}</Text>
+                                        </View>
+                                    ))}
+                                </View>
+                            </View>
+                        </Animated.View>
 
-                    <View style={styles.resultContainer}>
-                        <Image
-                            source={{ uri: result.image }}
-                            style={styles.image}
-                            resizeMode="cover"
-                        />
-                        <View style={styles.infoContainer}>
-                            <Text style={styles.diseaseText}>Planta: {result?.plant ?? ''}</Text>
-                            <Text style={styles.diseaseText}>Enfermedad: {result?.disease ?? ''}</Text>
-                            <Text style={styles.probabilityText}>Descripción: {result?.description ?? ''}</Text>
-                            <Text style={styles.probabilityText}>Probabilidad: {result?.probability ?? ''}</Text>
-                        </View>
-                        <View style={styles.recommendationsContainer}>
-                            <Text style={styles.recommendationsTitle}>Recomendaciones:</Text>
-                            {result.recommendations.map((rec, index) => (
-                                <Text key={rec.split('')[0]} style={styles?.recommendationItem ?? ''}>• {rec}</Text>
-                            ))}
+                        <View style={styles.buttonContainer}>
+                            <TouchableOpacity
+                                style={[styles.button, styles.homeButton]}
+                                onPress={() => router.replace('/home')}
+                            >
+                                <Feather name="home" size={24} color="#ffffff" />
+                                <Text style={styles.buttonText}>Inicio</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.button, styles.historyButton]}
+                                onPress={() => router.replace('/history')}
+                            >
+                                <Feather name="clock" size={24} color="#ffffff" />
+                                <Text style={styles.buttonText}>Historial</Text>
+                            </TouchableOpacity>
                         </View>
                     </View>
-
-                    <View style={styles.buttonContainer}>
-                        <TouchableOpacity
-                            style={[styles.button, styles.homeButton]}
-                            onPress={() => router.replace('/home')}
-                        >
-                            <Feather name="home" size={24} color="#ffffff" />
-                            <Text style={styles.buttonText}>Ir a inicio</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.button, styles.historyButton]}
-                            onPress={() => { router.replace('/history') }}
-                        >
-                            <Feather name="clock" size={24} color="#ffffff" />
-                            <Text style={styles.buttonText}>Ir a Historial</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
+                </ScrollView>
             </LinearGradient>
         </SafeAreaView>
     );
@@ -78,101 +107,145 @@ export default function ImageResult() {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#e8f5e9',
+        backgroundColor: '#4caf50',
     },
     gradient: {
         flex: 1,
+    },
+    scrollContent: {
+        flexGrow: 1,
     },
     content: {
         flex: 1,
         paddingHorizontal: width * 0.05,
         paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+        paddingBottom: height * 0.03,
     },
-    header: {
-        alignItems: 'center',
-        marginVertical: height * 0.02,
-    },
-    headerText: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#333',
-    },
-    resultContainer: {
+    card: {
         backgroundColor: '#ffffff',
         borderRadius: 20,
-        padding: 20,
-        marginBottom: height * 0.02,
+        overflow: 'hidden',
+        marginVertical: height * 0.02,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 5,
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.3,
+        shadowRadius: 20,
+        elevation: 10,
+    },
+    imageContainer: {
+        width: '100%',
+        height: height * 0.3,
     },
     image: {
         width: '100%',
-        height: height * 0.3,
-        borderRadius: 10,
-        marginBottom: 15,
+        height: '100%',
+    },
+    imageOverlay: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: 20,
+    },
+    plantName: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#ffffff',
+        marginBottom: 5,
+    },
+    diseaseName: {
+        fontSize: 20,
+        fontWeight: '600',
+        color: '#8bc34a',
     },
     infoContainer: {
-        marginBottom: 15,
+        padding: 20,
     },
-    diseaseText: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#333',
-        marginBottom: 5,
+    probabilityContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 20,
     },
     probabilityText: {
         fontSize: 16,
         color: '#666',
+        marginRight: 10,
     },
-    recommendationsContainer: {
-        borderTopWidth: 1,
-        borderTopColor: '#e0e0e0',
-        paddingTop: 15,
+    probabilityBar: {
+        flex: 1,
+        height: 10,
+        backgroundColor: '#e0e0e0',
+        borderRadius: 5,
+        overflow: 'hidden',
     },
-    recommendationsTitle: {
-        fontSize: 18,
-        fontWeight: '600',
+    probabilityFill: {
+        height: '100%',
+        borderRadius: 5,
+    },
+    probabilityValue: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333',
+        marginLeft: 10,
+    },
+    sectionContainer: {
+        marginBottom: 20,
+    },
+    sectionTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
         color: '#333',
         marginBottom: 10,
     },
-    recommendationItem: {
+    sectionText: {
         fontSize: 16,
         color: '#666',
-        marginBottom: 5,
+        lineHeight: 24,
+    },
+    recommendationItem: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        marginBottom: 10,
+    },
+    recommendationIcon: {
+        marginRight: 10,
+        marginTop: 2,
+    },
+    recommendationText: {
+        flex: 1,
+        fontSize: 16,
+        color: '#666',
     },
     buttonContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: height * 0.03,
+        marginTop: height * 0.02,
     },
     button: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         paddingVertical: height * 0.015,
-        paddingHorizontal: width * 0.04,
-        borderRadius: 25,
+        paddingHorizontal: width * 0.06,
+        borderRadius: 30,
         flex: 1,
         marginHorizontal: 5,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        elevation: 3,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 6,
     },
     historyButton: {
         backgroundColor: '#2196f3',
     },
     homeButton: {
-        backgroundColor: '#4caf50',
+        backgroundColor: '#8bc34a',
     },
     buttonText: {
         color: '#ffffff',
-        fontSize: 14,
+        fontSize: 16,
         fontWeight: '600',
-        marginLeft: 6,
+        marginLeft: 8,
     },
 });

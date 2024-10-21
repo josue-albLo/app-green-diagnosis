@@ -17,11 +17,11 @@ export const getItem = async (key: string) => {
             return data;
         } else {
             console.log('No se encontraron datos');
-            return null;
+            return '';
         }
     } catch (error) {
         console.log('Error al recuperar los datos:', error);
-        return null;
+        return '';
     }
 }
 

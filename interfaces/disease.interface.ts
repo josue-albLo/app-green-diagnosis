@@ -4,7 +4,8 @@ export interface DiseaseInfo {
     description: string;
     recommendations: string[];
 }
-export interface DiseaseRequest {
+export interface DiseaseResponse {
+    id: string;
     image: string;
     email: string;
     disease: string;
@@ -16,6 +17,7 @@ export interface DiseaseRequest {
 
 export interface DiagnosticHistory {
     id: string;
+    user_id: string;
     plant: string;
     date: string;
     disease: string;
