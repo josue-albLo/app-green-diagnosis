@@ -1,9 +1,3 @@
-import { SecurityKeys } from '@/enums/security-keys.enum';
-import { DiagnosticHistory } from '@/interfaces/disease.interface';
-import NetInfo from '@react-native-community/netinfo';
-import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
-import { router, useFocusEffect } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import {
   Animated,
@@ -14,19 +8,28 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
+  ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
+import { router, useFocusEffect } from 'expo-router';
+import NetInfo from '@react-native-community/netinfo';
+import { SecurityKeys } from '@/enums/security-keys.enum';
+import { DiagnosticHistory } from '@/interfaces/disease.interface';
 import { getHistory } from '../../api/diagnosis.api';
 import { getItem } from '../../helper/storage';
-const { width, height } = Dimensions.get('window');
+
+const { height } = Dimensions.get('window');
 
 export default function AnalysisHistoryScreen() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const animatedValue = useRef(new Animated.Value(0)).current;
   const [historyData, setHistoryData] = useState<DiagnosticHistory[]>([]);
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const [isConnected, setIsConnected] = useState(false);
+  const [isConnected, setIsConnected] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   const goToDetails = (diagnosticParam: DiagnosticHistory) => {
     if (!diagnosticParam) return;
@@ -34,42 +37,47 @@ export default function AnalysisHistoryScreen() {
   };
 
   const getAllHistory = async () => {
+    setIsLoading(true);
     try {
       const email = await getItem(SecurityKeys.USER);
       const token = await getItem(SecurityKeys.ACCESS_TOKEN);
-      await getHistory(token, email)
-        .then((res) => {
-          if (res?.history && res.history.length > 0) {
-            const formattedData = res.history.map((item: any) => ({
-              ...item,
-              id: item._id,
-            }));
-            console.log('History:', formattedData);
-            setHistoryData(formattedData);
-          }
-          setErrorMessage(res?.message ?? 'No se encontraron registros.');
-
-        })
-        .catch((error) => {
-          setErrorMessage('No se encontraron registros.');
-          console.error('Error fetching history:', error)
-        });
+      const res = await getHistory(token, email);
+      if (res?.history && res.history.length > 0) {
+        const formattedData = res.history.map((item: any) => ({
+          ...item,
+          id: item._id,
+        }));
+        setHistoryData(formattedData);
+        setErrorMessage('');
+      } else {
+        setHistoryData([]);
+        setErrorMessage(res?.message ?? 'No se encontraron registros.');
+      }
     } catch (err) {
       console.error('Error fetching history:', err);
+      setErrorMessage('Error al obtener el historial.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useFocusEffect(
     React.useCallback(() => {
       const unsubscribe = NetInfo.addEventListener((state) => {
-        setIsConnected(state?.isConnected ?? false);
-        setErrorMessage(isConnected ? '' : 'No hay conexión a internet');
+        setIsConnected(state.isConnected ?? false);
       });
-      getAllHistory();
+
+      if (isConnected) {
+        getAllHistory();
+      } else {
+        setErrorMessage('No hay conexión a internet');
+        setIsLoading(false);
+      }
+
       return () => {
         unsubscribe();
       };
-    }, [])
+    }, [isConnected])
   );
 
   const renderHistoryItem = ({ item, index }: { item: DiagnosticHistory; index: number }) => {
@@ -124,7 +132,6 @@ export default function AnalysisHistoryScreen() {
   };
 
   return (
-
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       <LinearGradient
@@ -135,7 +142,15 @@ export default function AnalysisHistoryScreen() {
           <Text style={styles.headerText}>Historial de Análisis</Text>
         </View>
 
-        {historyData ? (
+        {isLoading ? (
+          <View style={styles.loaderContainer}>
+            <ActivityIndicator size="large" color="#4CAF50" />
+          </View>
+        ) : errorMessage ? (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{errorMessage}</Text>
+          </View>
+        ) : (
           <Animated.FlatList
             data={historyData}
             renderItem={renderHistoryItem}
@@ -147,12 +162,7 @@ export default function AnalysisHistoryScreen() {
               { useNativeDriver: true }
             )}
           />
-        ) : (
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Text>{errorMessage}</Text>
-          </View>
         )}
-
       </LinearGradient>
     </SafeAreaView>
   );
@@ -252,5 +262,20 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 14,
     fontWeight: 'bold',
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#ff0000',
+    textAlign: 'center',
   },
 });
