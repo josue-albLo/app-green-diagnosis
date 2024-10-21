@@ -1,4 +1,4 @@
-import { DiseaseInfo, DiseaseRequest } from '@/interfaces/disease.interface';
+import { DiseaseResponse } from '@/interfaces/disease.interface';
 import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Camera } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
@@ -9,7 +9,6 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Button,
   Dimensions,
   ImageBackground,
   Modal,
@@ -29,8 +28,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { uploadDiagnosticToCloud } from '../../api/diagnosis.api';
-import diseases from '../../data/diseases.json';
+import { createFormData, upImageToPredict } from '../../api/diagnosis.api';
 
 const { width, height } = Dimensions.get('window');
 
@@ -192,40 +190,13 @@ export default function Component(): JSX.Element {
   const [hasGalleryPermission, setHasGalleryPermission] = useState<boolean | null>(null);
   const [image, setImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [errorWeather, setErrorWeather] = useState<string | null>(null);
+
   const defaultBackground = require('./../../assets/public/images/imgBack.jpg');
   const ApiKey = process.env.EXPO_PUBLIC_API_KEY_OPEN_WEATHER_MAP;
-  const [errorWeather, setErrorWeather] = useState<string | null>(null);
-  const [isErrorModalVisible, setIsErrorModalVisible] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const diseaseInfo: DiseaseInfo[] = diseases;
-
-  const buildFakeData = (): DiseaseRequest => {
-    return {
-      image: 'https://via.placeholder.com/150',
-      email: 'sample@example.com',
-      plant: 'Sample Plant',
-      disease: 'Sample Disease',
-      description: 'This is a sample description of the disease. It is a long text that describes the disease in detail.',
-      probability: '85%',
-      recommendations: [
-        'Rest and hydration',
-        'Consult with a doctor',
-        'Follow prescribed medication'
-      ]
-    }
-  }
-
-  const showErrorModal = (message: string): void => {
-    setErrorMessage(message);
-    setIsErrorModalVisible(true);
-  };
-
-  const hideErrorModal = (): void => {
-    setErrorMessage(null);
-    setIsErrorModalVisible(false);
-  };
-
-  const [weather, setWeather] = useState<WeatherData | null>(null);
 
   const buildUrlApi = (latitude: number, longitude: number): string => {
     return `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${ApiKey}&units=metric`
@@ -248,15 +219,25 @@ export default function Component(): JSX.Element {
     }
   }
 
-  const upData = () => {
-    const fakData = buildFakeData();
-    uploadDiagnosticToCloud('token', fakData)
-      .then((res) => {
-        console.log(res);
-      }).catch((err) => {
-        console.log(err);
-      });
-  }
+  const upImage = async (image: FormData) => {
+    setIsUploading(true);
+    setErrorMessage(null);
+    try {
+      const res = await upImageToPredict('token', image);
+      if (res?.id || res?.disease) {
+        const data: DiseaseResponse = res;
+        console.log(data);
+        router.push({ pathname: '/image-result', params: { result: JSON.stringify(res) } });
+      } else {
+        setErrorMessage('No se pudo procesar la imagen correctamente.');
+      }
+    } catch (err) {
+      console.error(err);
+      setErrorMessage('Error de conexión. Por favor, inténtelo de nuevo.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -329,39 +310,20 @@ export default function Component(): JSX.Element {
     setImage(null);
   };
 
-  const processImage = (): void => {
-    upData();
-    return;
+  const processImage = async (): Promise<void> => {
+    if (!image) {
+      setErrorMessage('No se ha seleccionado ninguna imagen.');
+      return;
+    }
     setIsLoading(true);
-    const isError = false;
-    setTimeout(() => {
-      if (isError) {
-        showErrorModal('Error al procesar la imagen.');
-        setIsLoading(false);
-      }
-      else {
-        if (!image) {
-          showErrorModal('No se ha seleccionado ninguna imagen.');
-          setIsLoading(false);
-          return;
-        }
-        // Procesar la imagen
-        const data = {
-          image,
-          plant: 'Sample Plant',
-          disease: 'Sample Disease',
-          description: 'This is a sample description of the disease. It is a long text that describes the disease in detail.',
-          probability: '85%',
-          recommendations: [
-            'Rest and hydration',
-            'Consult with a doctor',
-            'Follow prescribed medication'
-          ]
-        }
-        setIsLoading(false);
-        router.push({ pathname: '/image-result', params: { result: JSON.stringify(data) } });
-      }
-    }, 3000);
+    try {
+      await upImage(createFormData(image));
+    } catch (error) {
+      console.error('Error processing image:', error);
+      setErrorMessage('Error al procesar la imagen. Por favor, inténtelo de nuevo.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -372,6 +334,7 @@ export default function Component(): JSX.Element {
         style={styles.gradient}
       >
         <View style={styles.content}>
+          {/* Weather display */}
           <View style={styles.header}>
             <View style={styles.weatherContainer}>
               {weather ? (
@@ -388,9 +351,10 @@ export default function Component(): JSX.Element {
             </View>
           </View>
 
+          {/* Camera/Image display */}
           <View style={styles.cameraContainer}>
             <ImageBackground
-              source={image ?? defaultBackground}
+              source={image ? { uri: image } : defaultBackground}
               style={styles.cameraBackground}
               resizeMode="cover"
             >
@@ -400,6 +364,8 @@ export default function Component(): JSX.Element {
               </View>
             </ImageBackground>
           </View>
+
+          {/* Action buttons */}
           <View style={styles.buttonContainer}>
             {!image ? (
               <>
@@ -418,39 +384,42 @@ export default function Component(): JSX.Element {
                   <Ionicons name="refresh-outline" size={24} color="#ffffff" />
                   <Text style={styles.buttonText}>Restablecer</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.button, styles.processButton]} onPress={processImage}>
+                <TouchableOpacity
+                  style={[styles.button, styles.processButton, (isLoading || isUploading) && styles.disabledButton]}
+                  onPress={processImage}
+                  disabled={isLoading || isUploading}
+                >
                   <Ionicons name="cog-outline" size={24} color="#ffffff" />
-                  <Text style={styles.buttonText}>Procesar</Text>
+                  <Text style={styles.buttonText}>
+                    {isUploading ? 'Enviando...' : 'Procesar'}
+                  </Text>
                 </TouchableOpacity>
               </>
             )}
           </View>
+
+          {/* Error message display */}
+          {errorMessage && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{errorMessage}</Text>
+            </View>
+          )}
         </View>
       </LinearGradient>
+
+      {/* Loading modal */}
       <Modal
         transparent={true}
         animationType="fade"
-        visible={isLoading}
-        onRequestClose={() => setIsLoading(false)}
+        visible={isLoading || isUploading}
+        onRequestClose={() => { }}
       >
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
             <ActivityIndicator size="large" color="#4caf50" />
-            <Text style={styles.modalText}>Cargando...</Text>
-          </View>
-        </View>
-      </Modal>
-      <Modal
-        transparent={true}
-        animationType="slide"
-        visible={isErrorModalVisible}
-        onRequestClose={hideErrorModal}
-      >
-        <View style={styles.centeredView}>
-          <View style={styles.errorModalView}>
-            <Text style={styles.modalText}>Error</Text>
-            <Text style={styles.modalText}>{errorMessage}</Text>
-            <Button title="Cerrar" onPress={() => hideErrorModal()} />
+            <Text style={styles.modalText}>
+              {isUploading ? 'Enviando imagen...' : 'Procesando...'}
+            </Text>
           </View>
         </View>
       </Modal>
@@ -607,5 +576,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 18,
     fontWeight: '600',
+  },
+  errorContainer: {
+    backgroundColor: 'rgba(255, 0, 0, 0.1)',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 10,
+  },
+  errorText: {
+    color: 'red',
+    textAlign: 'center',
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
 });
