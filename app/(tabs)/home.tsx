@@ -1,11 +1,13 @@
+import { SecurityKeys } from '@/enums/security-keys.enum';
+import { getItem } from '@/helper/storage';
 import { DiseaseResponse } from '@/interfaces/disease.interface';
 import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
 import { Camera } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { router } from 'expo-router';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -30,7 +32,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { createFormData, upImageToPredict } from '../../api/diagnosis.api';
-import OnboardingScreen from '../onboarding';
+import settingsFirebase from '../../database/firebase';
 const { width, height } = Dimensions.get('window');
 
 interface WeatherData {
@@ -195,12 +197,32 @@ export default function Component(): JSX.Element {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [errorWeather, setErrorWeather] = useState<string | null>(null);
-  const navigation = useNavigation();
   const defaultBackground = require('./../../assets/public/images/imgBack.jpg');
   const ApiKey = process.env.EXPO_PUBLIC_API_KEY_OPEN_WEATHER_MAP;
+  const [userId, setUserId] = useState<string | null>(null);
 
   const buildUrlApi = (latitude: number, longitude: number): string => {
     return `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${ApiKey}&units=metric`
+  }
+
+  const upImageToFirebase = async (uri: string, filename: string) => {
+    console.log('Uploading image to Firebase:', uri, filename);
+    const storage = settingsFirebase.storage;
+    const storageRef = ref(storage, `images/${filename}`);
+    const response = await fetch(uri);
+    const blob = await response.blob();
+
+    try {
+      const uploadTask = uploadBytes(storageRef, blob);
+      await uploadTask;
+
+      const url = await getDownloadURL(storageRef);
+      console.log('File available at', url);
+      return encodeURI(url);
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      return null;
+    }
   }
 
   const getWeather = async (latitude: number, longitude: number): Promise<void> => {
@@ -220,28 +242,62 @@ export default function Component(): JSX.Element {
     }
   }
 
-  const upImage = async (image: FormData) => {
+  const genIdForImage = (): string => {
+    return new Date().getTime().toString();
+  }
+
+  const saveImage = async (uri: string, response: DiseaseResponse, canSave: boolean = false) => {
+    if (!userId || !uri || !canSave) {
+      showErrorMessage('No se pudo guardar la imagen. Faltan datos.');
+      router.push({ pathname: '/image-result', params: { result: JSON.stringify(response) } });
+      return;
+    }
+    console.log('Saving image:', uri);
+    await upImageToFirebase(uri, `${userId}:::${genIdForImage()}`)
+      .then((url) => {
+        if (url) {
+          //Todo: Guardar en la base de datos
+          response.image = url ?? '';
+          console.log('Image saved:', response);
+          router.push({ pathname: '/image-result', params: { result: JSON.stringify(response) } });
+        }
+      }).catch((error) => {
+        console.error('Error saving image:', error);
+      })
+  }
+
+  const upImage = async (imageForm: FormData) => {
     setIsUploading(true);
     setErrorMessage(null);
+    if (!image || !userId) {
+      showErrorMessage('No se ha seleccionado ninguna imagen.');
+      setIsUploading(false);
+      return;
+    }
     try {
-      const res = await upImageToPredict('token', image);
+      const res = await upImageToPredict('token', imageForm);
       if (res?.id || res?.disease) {
         const data: DiseaseResponse = res;
-        console.log(data);
-        router.push({ pathname: '/image-result', params: { result: JSON.stringify(res) } });
+        await saveImage(image, res, data.canSave);
       } else {
-        setErrorMessage('No se pudo procesar la imagen correctamente.');
+        showErrorMessage('No se pudo procesar la imagen correctamente.');
 
       }
     } catch (err) {
       console.error(err);
-      setErrorMessage('Error de conexión. Por favor, inténtelo de nuevo.');
+      showErrorMessage('Error de conexión. Por favor, inténtelo de nuevo.');
     } finally {
       setIsUploading(false);
       setImage(null);
-      setTimeout(() => setErrorMessage(null), 5000);
     }
   };
+
+  const showErrorMessage = (error: string) => {
+    setErrorMessage(error);
+    setTimeout(() => {
+      setErrorMessage('');
+    }, 5000)
+  }
 
   useEffect(() => {
     (async () => {
@@ -253,6 +309,9 @@ export default function Component(): JSX.Element {
         }
         let currentLocation = await Location.getCurrentPositionAsync({});
         await getWeather(currentLocation.coords.latitude, currentLocation.coords.longitude);
+        const getUserId = await getItem(SecurityKeys.ID);
+        setUserId(getUserId);
+        console.log('User ID:', getUserId);
       } catch (error) {
         Alert.alert('Error', 'No se pudo obtener la ubicación actual.');
       }
@@ -286,9 +345,10 @@ export default function Component(): JSX.Element {
         console.log('Imagen seleccionada URI:', result.assets[0].uri);
         setImage(result.assets[0].uri); // Establecemos la imagen seleccionada
       } else {
-        console.log('Selección de imagen cancelada o sin URI.');
+        showErrorMessage('No se ha seleccionado ninguna imagen.');
       }
     } catch (error) {
+      showErrorMessage('Error seleccionando la imagen.');
       console.log('Error seleccionando la imagen:', error);
     }
   };
@@ -316,7 +376,7 @@ export default function Component(): JSX.Element {
 
   const processImage = async (): Promise<void> => {
     if (!image) {
-      setErrorMessage('No se ha seleccionado ninguna imagen.');
+      showErrorMessage('No se ha seleccionado ninguna imagen.');
       return;
     }
     setIsLoading(true);
@@ -324,9 +384,10 @@ export default function Component(): JSX.Element {
       await upImage(createFormData(image));
     } catch (error) {
       console.error('Error processing image:', error);
-      setErrorMessage('Error al procesar la imagen. Por favor, inténtelo de nuevo.');
+      showErrorMessage('Error al procesar la imagen. Por favor, inténtelo de nuevo.');
     } finally {
       setIsLoading(false);
+      setImage(null);
     }
   };
 

@@ -29,13 +29,12 @@ export default function ImageResult() {
     }
 
     const result = data as DiseaseResponse;
-
+    const decodedImage = decodeURI(result.image);
     const showAdvice = result.disease === 'Desconocido';
 
     const parseToPercent = (value: string = '0') => {
         const num = parseFloat(value);
         const formattedNum = (num * 100).toFixed(2);
-        console.log(formattedNum);
         return `${formattedNum}%`;
     }
 
@@ -58,7 +57,7 @@ export default function ImageResult() {
                         <Animated.View entering={FadeInDown.delay(200).duration(1000)} style={styles.card}>
                             <View style={styles.imageContainer}>
                                 <Image
-                                    source={{ uri: result.image }}
+                                    source={{ uri: decodedImage }}
                                     style={styles.image}
                                     resizeMode="cover"
                                 />
@@ -171,6 +170,7 @@ const styles = StyleSheet.create({
     image: {
         width: '100%',
         height: '100%',
+        resizeMode: 'cover',
     },
     imageOverlay: {
         position: 'absolute',

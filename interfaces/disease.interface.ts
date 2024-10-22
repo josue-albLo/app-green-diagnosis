@@ -13,6 +13,7 @@ export interface DiseaseResponse {
     probability: string;
     description: string;
     recommendations: string[];
+    canSave: boolean;
 }
 
 export interface DiagnosticHistory {

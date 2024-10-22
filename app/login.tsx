@@ -54,6 +54,7 @@ export default function LoginScreen() {
             console.log('Token:', refresToken);
             setItem(SecurityKeys.USER, email);
             setItem(SecurityKeys.ACCESS_TOKEN, refresToken);
+            setItem(SecurityKeys.ID, user.uid);
             router.push('/home');
           }
           else {
