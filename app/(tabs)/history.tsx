@@ -20,6 +20,9 @@ import { SecurityKeys } from '@/enums/security-keys.enum';
 import { DiagnosticHistory } from '@/interfaces/disease.interface';
 import { getHistory } from '../../api/diagnosis.api';
 import { getItem } from '../../helper/storage';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import firebaseSettings from '../../database/firebase';
+
 
 const { height } = Dimensions.get('window');
 
@@ -39,20 +42,24 @@ export default function AnalysisHistoryScreen() {
   const getAllHistory = async () => {
     setIsLoading(true);
     try {
-      const email = await getItem(SecurityKeys.USER);
-      const token = await getItem(SecurityKeys.ACCESS_TOKEN);
-      const res = await getHistory(token, email);
-      if (res?.history && res.history.length > 0) {
-        const formattedData = res.history.map((item: any) => ({
-          ...item,
-          id: item._id,
-        }));
-        setHistoryData(formattedData);
-        setErrorMessage('');
-      } else {
-        setHistoryData([]);
-        setErrorMessage(res?.message ?? 'No se encontraron registros.');
-      }
+      const userId = await getItem(SecurityKeys.ID);
+      const q = query(collection(firebaseSettings.db, 'diagnosisRecord'), where('userId', '==', userId));
+      getDocs(q).then((querySnapshot) => {
+        const history: DiagnosticHistory[] = querySnapshot.docs.map((doc) => {
+          const data = doc.data();
+          return data as DiagnosticHistory;
+        })
+        console.log('History:', history);
+        setHistoryData(history);
+
+      }).catch((error) => {
+        console.error('Error fetching history:', error);
+        setErrorMessage('Error al obtener el historial.');
+      }).finally(() => {
+        setIsLoading(false);
+      })
+
+
     } catch (err) {
       console.error('Error fetching history:', err);
       setErrorMessage('Error al obtener el historial.');
@@ -106,7 +113,7 @@ export default function AnalysisHistoryScreen() {
           onPress={() => setSelectedId(isSelected ? null : item.id)}
           activeOpacity={0.9}
         >
-          <Image source={{ uri: item.image }} style={styles.plantImage} />
+          <Image source={{ uri: decodeURI(item.image) }} style={styles.plantImage} />
           <LinearGradient
             colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.3)', 'transparent']}
             style={styles.gradient}
@@ -154,7 +161,7 @@ export default function AnalysisHistoryScreen() {
           <Animated.FlatList
             data={historyData}
             renderItem={renderHistoryItem}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => item.date}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
             onScroll={Animated.event(

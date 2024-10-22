@@ -33,6 +33,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { createFormData, upImageToPredict } from '../../api/diagnosis.api';
 import settingsFirebase from '../../database/firebase';
+import { addDoc, collection } from 'firebase/firestore';
 const { width, height } = Dimensions.get('window');
 
 interface WeatherData {
@@ -205,6 +206,39 @@ export default function Component(): JSX.Element {
     return `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${ApiKey}&units=metric`
   }
 
+  const saveInDatabase = async (response: DiseaseResponse) => {
+    const userId = await getItem(SecurityKeys.ID);
+    const email = await getItem(SecurityKeys.USER);
+    if (!userId) {
+      console.error('No user ID found');
+      return;
+    }
+    const data = {
+      userId,
+      disease: response.disease,
+      plant: response.plant,
+      image: response.image,
+      date: new Date().toISOString(),
+      email: email,
+      probability: response.probability,
+      description: response.description,
+      recommendations: response.recommendations,
+    }
+
+    try {
+      addDoc(collection(settingsFirebase.db, 'diagnosisRecord'), data)
+        .then((docRef) => {
+          console.log('Document written with ID: ', docRef.id);
+        })
+        .catch((error) => {
+          console.error('Error adding document: ', error);
+        });
+    } catch (error) {
+      console.error('Error saving data:', error);
+    }
+
+  }
+
   const upImageToFirebase = async (uri: string, filename: string) => {
     console.log('Uploading image to Firebase:', uri, filename);
     const storage = settingsFirebase.storage;
@@ -259,6 +293,7 @@ export default function Component(): JSX.Element {
           //Todo: Guardar en la base de datos
           response.image = url ?? '';
           console.log('Image saved:', response);
+          saveInDatabase(response);
           router.push({ pathname: '/image-result', params: { result: JSON.stringify(response) } });
         }
       }).catch((error) => {
