@@ -30,6 +30,22 @@ export default function ImageResult() {
 
     const result = data as DiseaseResponse;
 
+    const showAdvice = result.disease === 'Desconocido';
+
+    const parseToPercent = (value: string = '0') => {
+        const num = parseFloat(value);
+        const formattedNum = (num * 100).toFixed(2);
+        console.log(formattedNum);
+        return `${formattedNum}%`;
+    }
+
+    const adviceMessage = "Para obtener un resultado más preciso, sigue estos consejos:\n\n" +
+        "1. Asegúrate de que la imagen esté bien enfocada.\n" +
+        "2. Toma la foto con buena iluminación natural.\n" +
+        "3. Captura la planta entera o la parte afectada de cerca.\n" +
+        "4. Evita sombras o reflejos en la imagen.\n" +
+        "5. Asegúrate de que la planta ocupe la mayor parte de la imagen.";
+
     return (
         <SafeAreaView style={styles.safeArea}>
             <StatusBar barStyle="light-content" backgroundColor="#4caf50" translucent />
@@ -54,30 +70,46 @@ export default function ImageResult() {
                                     <Text style={styles.diseaseName}>{result?.disease ?? ''}</Text>
                                 </LinearGradient>
                             </View>
+
                             <View style={styles.infoContainer}>
-                                <View style={styles.probabilityContainer}>
-                                    <Text style={styles.probabilityText}>Probabilidad:</Text>
-                                    <View style={styles.probabilityBar}>
-                                        <LinearGradient
-                                            colors={['#4caf50', '#8bc34a']}
-                                            style={[styles.probabilityFill, { width: `${parseFloat(result?.probability ?? '0') * 100}%` }]}
-                                        />
-                                    </View>
-                                    <Text style={styles.probabilityValue}>{result?.probability ?? ''}</Text>
-                                </View>
-                                <View style={styles.sectionContainer}>
-                                    <Text style={styles.sectionTitle}>Descripción</Text>
-                                    <Text style={styles.sectionText}>{result?.description ?? ''}</Text>
-                                </View>
-                                <View style={styles.sectionContainer}>
-                                    <Text style={styles.sectionTitle}>Recomendaciones</Text>
-                                    {result.recommendations.map((rec, index) => (
-                                        <View key={index} style={styles.recommendationItem}>
-                                            <Feather name="check-circle" size={20} color="#4caf50" style={styles.recommendationIcon} />
-                                            <Text style={styles.recommendationText}>{rec}</Text>
+
+                                {
+                                    showAdvice ? (
+                                        null
+                                    ) : (<View style={styles.probabilityContainer}>
+                                        <Text style={styles.probabilityText}>Probabilidad:</Text>
+                                        <View style={styles.probabilityBar}>
+                                            <LinearGradient
+                                                colors={['#4caf50', '#8bc34a']}
+                                                style={[styles.probabilityFill, { width: `${parseFloat(result?.probability ?? '0') * 100}%` }]}
+                                            />
                                         </View>
-                                    ))}
-                                </View>
+                                        <Text style={styles.probabilityValue}>{parseToPercent(result?.probability)}</Text>
+                                    </View>)
+                                }
+
+                                {showAdvice ? (
+                                    <View style={styles.adviceContainer}>
+                                        <Text style={styles.adviceTitle}>Consejos para mejorar el resultado:</Text>
+                                        <Text style={styles.adviceText}>{adviceMessage}</Text>
+                                    </View>
+                                ) : (
+                                    <>
+                                        <View style={styles.sectionContainer}>
+                                            <Text style={styles.sectionTitle}>Descripción</Text>
+                                            <Text style={styles.sectionText}>{result?.description ?? ''}</Text>
+                                        </View>
+                                        <View style={styles.sectionContainer}>
+                                            <Text style={styles.sectionTitle}>Recomendaciones</Text>
+                                            {result.recommendations.map((rec, index) => (
+                                                <View key={index} style={styles.recommendationItem}>
+                                                    <Feather name="check-circle" size={20} color="#4caf50" style={styles.recommendationIcon} />
+                                                    <Text style={styles.recommendationText}>{rec}</Text>
+                                                </View>
+                                            ))}
+                                        </View>
+                                    </>
+                                )}
                             </View>
                         </Animated.View>
 
@@ -247,5 +279,22 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         marginLeft: 8,
+    },
+    adviceContainer: {
+        backgroundColor: '#fff9c4',
+        borderRadius: 10,
+        padding: 15,
+        marginBottom: 20,
+    },
+    adviceTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#f57f17',
+        marginBottom: 10,
+    },
+    adviceText: {
+        fontSize: 16,
+        color: '#333',
+        lineHeight: 24,
     },
 });

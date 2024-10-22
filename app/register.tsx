@@ -1,16 +1,19 @@
+import { RegisterFormValues } from '@/interfaces/user.interface';
 import { Feather } from '@expo/vector-icons';
 import axios from 'axios';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { createUserWithEmailAndPassword, UserCredential } from 'firebase/auth';
+import { addDoc, collection } from 'firebase/firestore';
 import { Formik, FormikHelpers } from 'formik';
 import React, { useState } from 'react';
 import { ActivityIndicator, Image, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Button, Input } from 'react-native-elements';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Yup from 'yup';
+import settingsFirebase from '../database/firebase';
 import { SecurityKeys } from '../enums/security-keys.enum';
 import { setItem } from '../helper/storage';
-import { RegisterFormValues } from '@/interfaces/user.interface';
 
 const validationSchema = Yup.object().shape({
   fullName: Yup.string().required('El nombre completo es requerido'),
@@ -30,14 +33,29 @@ export default function RegisterScreen() {
   const [apiError, setApiError] = useState(false);
   const [messageError, setMessageError] = useState('');
   const emailIsRegistered = 'email-already-registered';
+  const auth = settingsFirebase.auth;
+  const db = settingsFirebase.db;
 
-  const buildDataSignUp = (values: RegisterFormValues) => {
-    return {
-      email: values.email,
-      password: values.password,
-      full_name: values.fullName,
-      department: values.department,
-      town: values.town,
+  const saveUserInFirestore = async (values: RegisterFormValues) => {
+    console.log('Guardando usuario en Firestore...');
+    try {
+      await addDoc(collection(db, 'users'), {
+        full_name: values.fullName,
+        password: values.password,
+        email: values.email,
+        department: values.department,
+        town: values.town,
+      })
+        .then((docRef) => {
+          console.log('Usuario registrado en Firestore:', docRef.id);
+          console.log('Usuario registrado en Firestore:', docRef.path);
+
+        })
+        .catch((error) => {
+          console.error('Error al registrar usuario en Firestore:', error);
+        })
+    } catch (err) {
+      console.log('Error:', err);
     }
   }
 
@@ -48,25 +66,24 @@ export default function RegisterScreen() {
     setIsLoading(true);
     setEmailError('');
     setMessageError('');
-    const url = `${process.env.EXPO_PUBLIC_API_GATEWAY_AUTH_URL}/signup`;
-    const data = buildDataSignUp(values);
     try {
-      const res = await axios.post(url, data, {
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-
-      if (res.status === 200) {
-        const token = res.data['access_token'] ?? '';
-        setItem(SecurityKeys.ACCESS_TOKEN, token);
-        setItem(SecurityKeys.USER, values.email);
-        router.replace('/(tabs)/home');
-      }
-      else {
-        setApiError(true);
-        setMessageError('Error durante el registro. Por favor, inténtalo de nuevo.');
-      }
+      console.log('Datos de registro:', values);
+      await createUserWithEmailAndPassword(auth, values.email, values.password)
+        .then((userCredential: UserCredential) => {
+          const user = userCredential.user;
+          console.log('Usuario registrado:', user);
+          setItem(SecurityKeys.ACCESS_TOKEN, user.refreshToken ?? '');
+          setItem(SecurityKeys.USER, user.email ?? '');
+          saveUserInFirestore(values);
+          router.push('/home');
+        })
+        .catch((error) => {
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          console.log('Error:', errorCode, errorMessage);
+          setApiError(true);
+          setMessageError('Error durante el registro. Por favor, inténtalo de nuevo.');
+        });
     } catch (error) {
 
       if (axios.isAxiosError(error)) {

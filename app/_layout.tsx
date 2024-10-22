@@ -61,6 +61,10 @@ export default function RootLayout() {
           name="diagnosis-details"
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="onboarding"
+          options={{ headerShown: false }}
+        />
         {/* Define una pantalla para rutas no encontradas */}
         <Stack.Screen name="+not-found" options={{ title: 'Not Found' }} />
       </Stack>

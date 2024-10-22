@@ -1,16 +1,18 @@
+import { LoginFormValues } from '@/interfaces/user.interface'
 import { Feather } from '@expo/vector-icons'
-import axios from 'axios'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
+import { signInWithEmailAndPassword, UserCredential } from 'firebase/auth'
 import { Formik } from 'formik'
 import React, { useState } from 'react'
 import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { Button, Input } from 'react-native-elements'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import * as Yup from 'yup'
+import settingsFirebase from '../database/firebase'
+import { SecurityKeys } from '../enums/security-keys.enum'
 import { setItem } from '../helper/storage'
-import { SecurityKeys } from '../enums/security-keys.enum';
-import { LoginFormValues } from '@/interfaces/user.interface'
+
 
 const validationSchema = Yup.object().shape({
   email: Yup.string().email('Correo inválido').required('El correo es requerido'),
@@ -21,6 +23,15 @@ export default function LoginScreen() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const auth = settingsFirebase.auth;
+
+  const showErrorMessage = (error: string) => {
+    setErrorMessage(error);
+    setTimeout(() => {
+      setErrorMessage('');
+    }, 5000)
+  }
+
 
   const handleLogin = async (values: LoginFormValues) => {
     setIsLoading(true);
@@ -32,25 +43,28 @@ export default function LoginScreen() {
     console.log('URL:', url);
 
     try {
-      const response = await axios.post(url, values, {
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
+      await signInWithEmailAndPassword(auth, values.email, values.password)
+        .then((userCredential: UserCredential) => {
+          if (userCredential?.user) {
+            const user = userCredential?.user;
+            const email = user?.email ?? '';
+            const refresToken = user?.refreshToken ?? '';
+            console.log('Usuario:', user);
+            console.log('Correo:', email);
+            console.log('Token:', refresToken);
+            setItem(SecurityKeys.USER, email);
+            setItem(SecurityKeys.ACCESS_TOKEN, refresToken);
+            router.push('/home');
+          }
+          else {
+            showErrorMessage('Credenciales incorrectas.\nPor favor, inténtalo de nuevo.');
+          }
 
-      if (response.status === 200) {
-        const token = response.data['access_token'] ?? '';
-        setItem(SecurityKeys.ACCESS_TOKEN, token);
-        setItem(SecurityKeys.USER, values.email);
-        console.log('Inicio de sesión exitoso:', response.data);
-        router.push('/home');
-      }
+
+        })
     } catch (error) {
       console.log('Error:', error);
-      setErrorMessage('Credenciales incorrectas.\nPor favor, inténtalo de nuevo.');
-      setTimeout(() => {
-        setErrorMessage('');
-      }, 5000)
+      showErrorMessage('Credenciales incorrectas.\nPor favor, inténtalo de nuevo.');
     } finally {
       setIsLoading(false);
     }

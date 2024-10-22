@@ -1,15 +1,16 @@
 import { Feather } from '@expo/vector-icons'
-import axios from 'axios'
 import * as ImagePicker from 'expo-image-picker'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
+import { collection, doc, getDocs, query, updateDoc, where } from 'firebase/firestore'
 import { Formik } from 'formik'
 import React, { useEffect, useState } from 'react'
-import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, View, Text } from 'react-native'
+import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native'
 import { Button, Input } from 'react-native-elements'
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import * as Yup from 'yup'
+import settingsFirebase from '../database/firebase'
 import { SecurityKeys } from '../enums/security-keys.enum'
 import { getItem } from '../helper/storage'
 
@@ -32,6 +33,7 @@ export default function ProfileForm() {
     const [avatar, setAvatar] = useState(null);
     const [email, setEmail] = useState<string>('');
     const [token, setToken] = useState<string>('');
+    const [idUser, setIdUser] = useState<string>('');
     const [fullName, setFullName] = useState<string>('');
     const [department, setDepartment] = useState<string>('');
     const [town, setTown] = useState<string>('');
@@ -39,23 +41,24 @@ export default function ProfileForm() {
     const [isSaving, setIsSaving] = useState<boolean>(false);
     const loadingText = 'Cargando datos del usuario...';
     const userProfileText = 'Perfil de Usuario';
+    const db = settingsFirebase.db;
+
 
     const handleSubmit = async (values: typeof UpdateFormValues) => {
         setIsSaving(true);
-        const url = `${process.env.EXPO_PUBLIC_API_GATEWAY_AUTH_URL}/update-info`
-        console.log({ ...values, avatar })
-        console.log('URL:', url);
+        console.log('Valores:', values);
         try {
-            const res = await axios.post(url, { ...values, avatar }, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `${token}`
-                }
+            updateDoc(doc(db, "users", idUser), {
+                full_name: values.full_name,
+                department: values.department,
+                town: values.town
+            }).then(() => {
+                console.log('Usuario actualizado correctamente');
+                setIsSaving(false);
+                router.back();
+            }).catch((error) => {
+                console.log('Error actualizando el usuario:', error);
             });
-            if (res.status === 200) {
-                console.log('Datos actualizados correctamente:', res.data);
-                router.push('/home');
-            }
         } catch (error) {
             console.log('Error:', error);
         } finally {
@@ -69,23 +72,32 @@ export default function ProfileForm() {
 
     const getUser = async (token_param: string, email_param: string) => {
         try {
-            const res = await axios.post(`${process.env.EXPO_PUBLIC_API_GATEWAY_AUTH_URL}/get-user`, { email: email_param }, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `${token_param}`
+            const q = query(collection(db, 'users'), where('email', '==', email_param));
+            getDocs(q).then((querySnapshot) => {
+                if (querySnapshot.empty) {
+                    console.log('No se encontró el usuario');
+                    router.push('/login');
+                } else {
+                    querySnapshot.forEach((doc) => {
+                        console.log('Usuario encontrado:', doc.data());
+                        setFullName(doc.data().full_name);
+                        setDepartment(doc.data().department);
+                        setTown(doc.data().town);
+                        setIdUser(doc.id);
+                        setIsLoading(false);
+                    })
                 }
+            }).catch((error) => {
+                console.log('Error obteniendo el usuario:', error);
+                router.push('/login');
+                setIsLoading(false);
+            }).finally(() => {
+                setIsLoading(false);
             });
-            if (res.status === 200) {
-                console.log('Datos del usuario:', res.data);
-                setFullName(res.data.full_name);
-                setDepartment(res.data.department);
-                setTown(res.data.town);
-            }
+
         } catch (error) {
             console.log('Error:', error);
             router.push('/login');
-        } finally {
-            setIsLoading(false);
         }
     }
 

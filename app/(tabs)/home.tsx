@@ -1,5 +1,6 @@
 import { DiseaseResponse } from '@/interfaces/disease.interface';
 import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { Camera } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -29,7 +30,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { createFormData, upImageToPredict } from '../../api/diagnosis.api';
-
+import OnboardingScreen from '../onboarding';
 const { width, height } = Dimensions.get('window');
 
 interface WeatherData {
@@ -194,7 +195,7 @@ export default function Component(): JSX.Element {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [errorWeather, setErrorWeather] = useState<string | null>(null);
-
+  const navigation = useNavigation();
   const defaultBackground = require('./../../assets/public/images/imgBack.jpg');
   const ApiKey = process.env.EXPO_PUBLIC_API_KEY_OPEN_WEATHER_MAP;
 
@@ -230,12 +231,15 @@ export default function Component(): JSX.Element {
         router.push({ pathname: '/image-result', params: { result: JSON.stringify(res) } });
       } else {
         setErrorMessage('No se pudo procesar la imagen correctamente.');
+
       }
     } catch (err) {
       console.error(err);
       setErrorMessage('Error de conexión. Por favor, inténtelo de nuevo.');
     } finally {
       setIsUploading(false);
+      setImage(null);
+      setTimeout(() => setErrorMessage(null), 5000);
     }
   };
 
