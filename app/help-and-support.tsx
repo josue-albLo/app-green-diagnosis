@@ -2,8 +2,8 @@ import { Feather } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import React from 'react'
-import { Linking, Platform, ScrollView, StatusBar, StyleSheet, View } from 'react-native'
-import { Button, Divider, Icon, ListItem, Text } from 'react-native-elements'
+import { Linking, Platform, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native'
+import { Button, Divider, Icon, ListItem } from 'react-native-elements'
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
@@ -50,11 +50,11 @@ export default function HelpSupportScreen() {
                                 onPress={() => router.back()}
                                 type="clear"
                             />
-                            <Text h4 style={styles.headerText}>Ayuda y Soporte</Text>
+                            <Text style={styles.headerText}>Ayuda y Soporte</Text>
                         </View>
 
                         <View style={styles.section}>
-                            <Text h4 style={styles.sectionTitle}>Preguntas Frecuentes</Text>
+                            <Text style={styles.sectionTitle}>Preguntas Frecuentes</Text>
                             {faqs.map((faq, index) => (
                                 <ListItem key={index} bottomDivider containerStyle={styles.faqItem}>
                                     <ListItem.Content>
@@ -68,7 +68,7 @@ export default function HelpSupportScreen() {
                         <Divider style={styles.divider} />
 
                         <View style={styles.section}>
-                            <Text h4 style={styles.sectionTitle}>Contacto</Text>
+                            <Text style={styles.sectionTitle}>Contacto</Text>
                             <Text style={styles.contactText}>
                                 Si necesitas ayuda adicional, no dudes en contactarnos:
                             </Text>
