@@ -137,7 +137,7 @@ export default function ProfileForm() {
         return (
             <View style={styles.loaderContainer}>
                 <ActivityIndicator size="large" color="#4CAF50" />
-                <Text style={styles.loaderText}>{loadingText ?? ''}</Text>
+                <Text style={styles.loaderText}>{loadingText}</Text>
             </View>
         );
     }
@@ -164,7 +164,7 @@ export default function ProfileForm() {
                                     onPress={() => router.back()}
                                     type="clear"
                                 />
-                                <Text style={styles.headerText}>{userProfileText ?? ''}</Text>
+                                <Text style={styles.headerText}>{userProfileText}</Text>
                             </View>
 
                             <View style={styles.avatarContainer}>

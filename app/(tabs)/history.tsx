@@ -1,5 +1,11 @@
-import React, { useRef, useState } from 'react';
+import NetInfo from '@react-native-community/netinfo';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
+import { router, useFocusEffect } from 'expo-router';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import React, { useCallback, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Animated,
   Dimensions,
   Image,
@@ -8,21 +14,14 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
-  ActivityIndicator
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
-import { router, useFocusEffect } from 'expo-router';
-import NetInfo from '@react-native-community/netinfo';
+
 import { SecurityKeys } from '@/enums/security-keys.enum';
 import { DiagnosticHistory } from '@/interfaces/disease.interface';
-import { getHistory } from '../../api/diagnosis.api';
-import { getItem } from '../../helper/storage';
-import { collection, getDocs, query, where } from 'firebase/firestore';
 import firebaseSettings from '../../database/firebase';
-
+import { getItem } from '../../helper/storage';
 
 const { height } = Dimensions.get('window');
 
@@ -34,42 +33,36 @@ export default function AnalysisHistoryScreen() {
   const [isConnected, setIsConnected] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
 
-  const goToDetails = (diagnosticParam: DiagnosticHistory) => {
+  const goToDetails = useCallback((diagnosticParam: DiagnosticHistory) => {
     if (!diagnosticParam) return;
     router.push({ pathname: '/diagnosis-details', params: { diagnosis: JSON.stringify(diagnosticParam) } });
-  };
+  }, []);
 
-  const getAllHistory = async () => {
+  const formatDateString = useCallback((date:string) =>{
+    const dateObj = new Date(date);
+    return `${dateObj.getDate()}/${dateObj.getMonth() + 1}/${dateObj.getFullYear()} ${dateObj.getHours()}:${dateObj.getMinutes()}`;
+  }, []);
+
+  const getAllHistory = useCallback(async () => {
     setIsLoading(true);
+    setErrorMessage('');
     try {
       const userId = await getItem(SecurityKeys.ID);
       const q = query(collection(firebaseSettings.db, 'diagnosisRecord'), where('userId', '==', userId));
-      getDocs(q).then((querySnapshot) => {
-        const history: DiagnosticHistory[] = querySnapshot.docs.map((doc) => {
-          const data = doc.data();
-          return data as DiagnosticHistory;
-        })
-        console.log('History:', history);
-        setHistoryData(history);
-
-      }).catch((error) => {
-        console.error('Error fetching history:', error);
-        setErrorMessage('Error al obtener el historial.');
-      }).finally(() => {
-        setIsLoading(false);
-      })
-
-
+      const querySnapshot = await getDocs(q);
+      const history: DiagnosticHistory[] = querySnapshot.docs.map((doc) => doc.data() as DiagnosticHistory);
+      console.log('History:', history);
+      setHistoryData(history);
     } catch (err) {
       console.error('Error fetching history:', err);
       setErrorMessage('Error al obtener el historial.');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       const unsubscribe = NetInfo.addEventListener((state) => {
         setIsConnected(state.isConnected ?? false);
       });
@@ -84,10 +77,10 @@ export default function AnalysisHistoryScreen() {
       return () => {
         unsubscribe();
       };
-    }, [isConnected])
+    }, [isConnected, getAllHistory])
   );
 
-  const renderHistoryItem = ({ item, index }: { item: DiagnosticHistory; index: number }) => {
+  const renderHistoryItem = useCallback(({ item, index }: { item: DiagnosticHistory; index: number }) => {
     const isSelected = item.id === selectedId;
     const inputRange = [
       -1,
@@ -121,7 +114,7 @@ export default function AnalysisHistoryScreen() {
           <View style={styles.cardContent}>
             <BlurView intensity={0} tint="dark" style={styles.textBackground}>
               <Text style={styles.cardTitle}>{item.plant}</Text>
-              <Text style={styles.cardDate}>{item.date}</Text>
+              <Text style={styles.cardDate}>{formatDateString(item.date)}</Text>
               <Text style={styles.cardDisease}>{item.disease}</Text>
             </BlurView>
           </View>
@@ -136,7 +129,7 @@ export default function AnalysisHistoryScreen() {
         </TouchableOpacity>
       </Animated.View>
     );
-  };
+  }, [selectedId, animatedValue, goToDetails]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -161,7 +154,7 @@ export default function AnalysisHistoryScreen() {
           <Animated.FlatList
             data={historyData}
             renderItem={renderHistoryItem}
-            keyExtractor={(item) => item.date}
+            keyExtractor={(item) => `${item.plant}-${item.date}`}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
             onScroll={Animated.event(
