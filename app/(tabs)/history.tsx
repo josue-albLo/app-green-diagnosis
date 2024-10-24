@@ -22,7 +22,8 @@ import { SecurityKeys } from '@/enums/security-keys.enum';
 import { DiagnosticHistory } from '@/interfaces/disease.interface';
 import firebaseSettings from '../../database/firebase';
 import { getItem } from '../../helper/storage';
-
+import GenPDF from '../../components/pdf/generate';
+import { Button } from 'react-native-elements/dist/buttons/Button';
 const { height } = Dimensions.get('window');
 
 export default function AnalysisHistoryScreen() {
@@ -38,7 +39,7 @@ export default function AnalysisHistoryScreen() {
     router.push({ pathname: '/diagnosis-details', params: { diagnosis: JSON.stringify(diagnosticParam) } });
   }, []);
 
-  const formatDateString = useCallback((date:string) =>{
+  const formatDateString = useCallback((date: string) => {
     const dateObj = new Date(date);
     return `${dateObj.getDate()}/${dateObj.getMonth() + 1}/${dateObj.getFullYear()} ${dateObj.getHours()}:${dateObj.getMinutes()}`;
   }, []);
@@ -138,10 +139,11 @@ export default function AnalysisHistoryScreen() {
         colors={['#e8f5e9', '#46af4e']}
         style={styles.container}
       >
+
         <View style={styles.header}>
           <Text style={styles.headerText}>Historial de Análisis</Text>
         </View>
-
+        <GenPDF diagnosticHistoryList={historyData} />
         {isLoading ? (
           <View style={styles.loaderContainer}>
             <ActivityIndicator size="large" color="#4CAF50" />
