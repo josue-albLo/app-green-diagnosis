@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import * as Yup from 'yup'
 import settingsFirebase from '../database/firebase'
 import { SecurityKeys } from '../enums/security-keys.enum'
-import { setItem } from '../helper/storage'
+import { setItem, getItem } from '../helper/storage'
 
 
 const validationSchema = Yup.object().shape({
@@ -30,6 +30,16 @@ export default function LoginScreen() {
     setTimeout(() => {
       setErrorMessage('');
     }, 5000)
+  }
+
+  const handleNextScreen = async () => {
+    const showOnboarding = await getItem(SecurityKeys.SHOW_ONBOARDING);
+    if (showOnboarding === 'false') {
+      router.push('/home');
+    }
+    else {
+      router.push('/onboarding');
+    }
   }
 
 
@@ -55,7 +65,7 @@ export default function LoginScreen() {
             setItem(SecurityKeys.USER, email);
             setItem(SecurityKeys.ACCESS_TOKEN, refresToken);
             setItem(SecurityKeys.ID, user.uid);
-            router.push('/home');
+            handleNextScreen();
           }
           else {
             showErrorMessage('Credenciales incorrectas.\nPor favor, inténtalo de nuevo.');

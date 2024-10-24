@@ -2,6 +2,8 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { Dimensions, Image, StyleSheet, Text, View } from 'react-native';
 import AppIntroSlider from 'react-native-app-intro-slider';
+import { SecurityKeys } from '../enums/security-keys.enum'
+import { setItem } from '../helper/storage'
 
 const { width, height } = Dimensions.get('window');
 
@@ -45,7 +47,8 @@ const OnboardingScreen: React.FC = () => {
     const onDone = () => {
         // Aquí puedes navegar a la siguiente pantalla o configurar un flag para evitar que se muestre el onboarding otra vez
         // Navega a la pantalla principal de la aplicación
-        navigation.push('/(tabs)/home');
+        setItem(SecurityKeys.SHOW_ONBOARDING, 'false');
+        navigation.push('/home')
     };
 
     return (

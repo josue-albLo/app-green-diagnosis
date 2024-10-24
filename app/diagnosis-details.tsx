@@ -3,7 +3,7 @@ import { Feather } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
     Dimensions,
     Image,
@@ -23,6 +23,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+
 const { width, height } = Dimensions.get('window');
 
 export default function DiagnosisDetailsScreen() {
@@ -34,6 +35,16 @@ export default function DiagnosisDetailsScreen() {
         router.replace('/history');
         return null;
     }
+
+    const formatDateString = useCallback((date: string) => {
+        const dateObj = new Date(date);
+        return `${dateObj.getDate()}/${dateObj.getMonth() + 1}/${dateObj.getFullYear()} ${dateObj.getHours()}:${dateObj.getMinutes()}`;
+    }, []);
+
+    const formatToPercent = useCallback((value: string) => {
+        const number = parseFloat(value) * 100;
+        return `${number.toFixed(2)}%`;
+    }, []);
 
     const scrollHandler = useAnimatedScrollHandler({
         onScroll: (event) => {
@@ -82,7 +93,7 @@ export default function DiagnosisDetailsScreen() {
                     <BlurView intensity={90} tint="light" style={styles.blurContainer}>
                         <View style={styles.titleContainer}>
                             <Text style={styles.plantName}>{diagnosis.plant}</Text>
-                            <Text style={styles.date}>{diagnosis.date}</Text>
+                            <Text style={styles.date}>{`Fecha: ${formatDateString(diagnosis.date)}`}</Text>
                         </View>
 
                         <View style={styles.diseaseContainer}>
@@ -90,7 +101,7 @@ export default function DiagnosisDetailsScreen() {
                             <Text style={styles.diseaseName}>{diagnosis.disease}</Text>
                             <View style={styles.probabilityContainer}>
                                 <Text style={styles.probabilityText}>Probabilidad:</Text>
-                                <Text style={styles.probabilityValue}>{diagnosis.probability}</Text>
+                                <Text style={styles.probabilityValue}>{formatToPercent(diagnosis.probability)}</Text>
                             </View>
                         </View>
 
